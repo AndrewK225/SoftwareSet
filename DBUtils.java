@@ -13,7 +13,7 @@ public final class DBUtils {
             int wins = 0;
             int losses = 0;
             
-            //login stuff
+            //Database login stuff CHANGE IF TESTING LOCALLY OR MAKE A USER WITH THESE CREDENTIALS
             Properties p = new Properties();
             p.put("user", "andrew");
             p.put("password", "password");
