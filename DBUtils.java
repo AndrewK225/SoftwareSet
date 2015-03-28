@@ -6,7 +6,7 @@ import java.util.Properties;
 public final class DBUtils {
 
     /* Will add a new user account into the database.*/
-    public static void signup(String user, String clear_pass, String email) {
+    public static void signUp(String user, String clear_pass, String email) {
         try{
         	//wins/losses default to 0. Hash the password
             String hashed_pass = hash(clear_pass);
