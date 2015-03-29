@@ -1,3 +1,17 @@
+/* This class holds all of the account utilities (create, sign in, sign out, update win/loss).
+ * 
+ * usage information
+ * ---------to create an account----------------
+ * DBUtils.signUp(String user, String clear_pass, String email)
+ * 
+ * ---------to sign in--------------------------
+ * DBUtils.signIn(String user, String clear_pass)
+ * 
+ * ---------to sign out-------------------------
+ * DBUtils.signOut(String user)
+ * */
+
+
 import java.sql.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -5,6 +19,7 @@ import java.util.Properties;
 
 public final class DBUtils {
 
+		
     /* Will add a new user account into the database.*/
     public static void signUp(String user, String clear_pass, String email) {
         try{
@@ -12,6 +27,8 @@ public final class DBUtils {
             String hashed_pass = hash(clear_pass);
             int wins = 0;
             int losses = 0;
+            int logged_in = 0; //default, not loggedIn, change to 1 once logged in
+           
             
             //Database login stuff CHANGE IF TESTING LOCALLY OR MAKE A USER WITH THESE CREDENTIALS
             Properties p = new Properties();
@@ -22,29 +39,41 @@ public final class DBUtils {
             String url = "jdbc:mysql://127.0.0.1/set_game";
             Connection conn = DriverManager.getConnection(url,p);
             
-            //do the sql stuffs
-            
-            String insert_statement = "INSERT INTO Accounts (Username, Password, Email, Wins, Losses) VALUE(?,?,?,?,?)";
-            PreparedStatement ps = conn.prepareStatement(insert_statement);
-            ps.setString(1,user);
-            ps.setString(2, hashed_pass);
-            ps.setString(3, email);
-            ps.setInt(4, wins);
-            ps.setInt(5, losses);
-            
-            ps.executeUpdate();
-            conn.close();
+            //check if username already exists
+            String check_username = "Select * FROM Accounts WHERE Username =?";
+            PreparedStatement ps = conn.prepareStatement(check_username);
+            ps.setString(1, user);
+            ResultSet rs = ps.executeQuery();
+            if(!rs.next()) {
+                //Insert username into database
+            	String insert_statement = "INSERT INTO Accounts (Username, Password, Email, Wins, Losses,LoggedIn) VALUE(?,?,?,?,?,?)";
+            	PreparedStatement ps2 = conn.prepareStatement(insert_statement);
+            	ps2.setString(1,user);
+            	ps2.setString(2, hashed_pass);
+            	ps2.setString(3, email);
+            	ps2.setInt(4, wins);
+            	ps2.setInt(5, losses);
+            	ps2.setInt(6, logged_in);
+            	ps2.executeUpdate();
+            	conn.close();
+            } else {
+            	//WE SHOULD PROBABLY REPROMPT FOR ANOTHER USERNAME
+            	System.out.println("Username already exists");
+            	conn.close();
+            }
             
         } catch(Exception e) {
         	System.err.println(e);
         }
     }
 
-    /*Query database for user account.
+    /* Query database for user account.
      * returns 0 for success
      * return 1 for username error
      * return 2 for password error
      * return 3 for exception
+     * 
+     * If all is good, change LoggedIn to 1.
      * */
     public static byte signIn(String user, String clear_pass) {
     	try {
@@ -63,24 +92,29 @@ public final class DBUtils {
     		PreparedStatement ps = conn.prepareStatement(query_statement);
     		ps.setString(1, user);
     		ResultSet rs = ps.executeQuery();
-    		
-    		
+    				
     		//get stored password
     		if(rs.next()) {
     			stored_pass = rs.getString("Password");
-    			conn.close();
+    	
     		} else {  //username not found
     			conn.close();
     			return 1;
     		}
-
     		
     		//hash the entered password and see if it matches value in DB
     		entered_pass = hash(clear_pass);
     		if(entered_pass.equals(stored_pass)) {
+    			//If all is good, change the LoggedIn field to 1
+    			String make_logged_in = "UPDATE Accounts SET LoggedIn = 1 WHERE Username = ?";
+    			PreparedStatement ps2 = conn.prepareStatement(make_logged_in);
+    			ps2.setString(1, user);
+    			ps2.executeUpdate();
+    			conn.close();
     			return 0;
     		}
     		else { //password doesn't match
+    			conn.close();
     			return 2;
     		}
     		
@@ -90,10 +124,29 @@ public final class DBUtils {
     	}
     	
     	
-    	
     }
     
-    
+    /* Change the LoggedIn field to 0
+     * 
+     * */
+    public static void signOut(String user) {
+    	try {
+    		Properties p = new Properties();
+    		p.put("user", "andrew");
+    		p.put("password", "password");
+    		String url= "jdbc:mysql://127.0.0.1/set_game";
+    		Connection conn = DriverManager.getConnection(url,p);
+    		
+    		String logout = "UPDATE Accounts SET LoggedIn = 0 WHERE Username = ?";
+    		PreparedStatement ps = conn.prepareStatement(logout);
+    		ps.setString(1, user);
+    		ps.executeUpdate();
+    		conn.close();
+    	}catch(Exception e) {
+    		System.err.println(e);
+    	}
+    	
+    }
     
     //use an MD5 hash 
     private static String hash(String cleartxt) throws NoSuchAlgorithmException {
@@ -107,9 +160,6 @@ public final class DBUtils {
         }
         return sb.toString();
     }
-    
-    
-    
     
     
     
