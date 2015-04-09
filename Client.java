@@ -131,8 +131,15 @@ public class Client {
 
 	private static void initGUI() {
 		// Set up the status bar
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		double screenWidth = screenSize.getWidth();
+		int scrnWidth = (int) screenWidth;
+		double screenHeight = screenSize.getHeight();
+		int scrnHeight = (int) screenHeight;
+		
 		statusBar = new JLabel();
 		statusBar.setText("Offline");
+		
 
 		// Set up the options pane
 		JPanel optionsPane = initOptionsPane();
@@ -162,7 +169,7 @@ public class Client {
 		mainFrame = new JFrame("Set Game Client");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setContentPane(mainPane);
-		mainFrame.setPreferredSize(new Dimension(800, 600));
+		mainFrame.setPreferredSize(new Dimension(scrnWidth, scrnHeight));
 		mainFrame.pack();
 		mainFrame.setLocationRelativeTo(null);
 		mainFrame.setVisible(true);
