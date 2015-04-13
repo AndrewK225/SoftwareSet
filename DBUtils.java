@@ -127,9 +127,9 @@ public final class DBUtils {
     }
     
     /* Change the LoggedIn field to 0
-     * 
+     * returns 1 on success.
      * */
-    public static void signOut(String user) {
+    public static int signOut(String user) {
     	try {
     		Properties p = new Properties();
     		p.put("user", "andrew");
@@ -142,11 +142,38 @@ public final class DBUtils {
     		ps.setString(1, user);
     		ps.executeUpdate();
     		conn.close();
+    		return 1; //when user signs out, return 1
     	}catch(Exception e) {
     		System.err.println(e);
+    		return 2;
     	}
     	
     }
+    
+    /* Update win record 
+     * I leave it to game logic to just send me the name of the winner
+     * */
+    public static void updateRecord(String p1) {
+    	try {
+    		Properties p = new Properties();
+    		p.put("user","andrew");
+    		p.put("password", "password");
+    		String url = "jdbc:mysql://127.0.0.1/set_game";
+    		Connection conn = DriverManager.getConnection(url,p);
+    		 
+    		String updateWin = "UPDATE Accounts SET Wins = Wins + 1 WHERE Username = ?";
+    		PreparedStatement ps = conn.prepareStatement(updateWin);
+    		ps.setString(1, p1);
+    		ps.executeUpdate();
+    		conn.close();
+    	}catch (Exception e) {
+    		System.err.println(e);
+    	}
+    	
+    	
+    }
+    
+    
     
     //use an MD5 hash 
     private static String hash(String cleartxt) throws NoSuchAlgorithmException {
@@ -160,8 +187,6 @@ public final class DBUtils {
         }
         return sb.toString();
     }
-    
-    
     
     
 }
