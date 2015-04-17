@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
+
 public final class DBUtils {
 
 		
@@ -24,7 +25,8 @@ public final class DBUtils {
     public static void signUp(String user, String clear_pass, String email) {
         try{
         	//wins/losses default to 0. Hash the password
-            String hashed_pass = hash(clear_pass);
+	                Class.forName("com.mysql.jdbc.Driver");
+	    String hashed_pass = hash(clear_pass);
             int wins = 0;
             int losses = 0;
             int logged_in = 0; //default, not loggedIn, change to 1 once logged in
@@ -36,7 +38,7 @@ public final class DBUtils {
             p.put("password", "password");
             
             //make connection
-            String url = "jdbc:mysql://127.0.0.1/set_game";
+            String url = "jdbc:mysql://127.0.0.1:3306/set_game";
             Connection conn = DriverManager.getConnection(url,p);
             
             //check if username already exists
@@ -77,6 +79,7 @@ public final class DBUtils {
      * */
     public static byte signIn(String user, String clear_pass) {
     	try {
+	    Class.forName("com.mysql.jdbc.Driver");
     		String stored_pass = null; 
     		String entered_pass = null; //hashed version of the user cleartxt password 
     		
@@ -84,7 +87,7 @@ public final class DBUtils {
     		Properties p = new Properties();
     		p.put("user", "andrew");
     		p.put("password", "password");
-    		String url= "jdbc:mysql://127.0.0.1/set_game";
+    		String url= "jdbc:mysql://127.0.0.1:3306/set_game";
     		Connection conn = DriverManager.getConnection(url,p);
     		
     		//query the database
@@ -131,10 +134,11 @@ public final class DBUtils {
      * */
     public static int signOut(String user) {
     	try {
+	    Class.forName("com.mysql.jdbc.Driver");
     		Properties p = new Properties();
     		p.put("user", "andrew");
     		p.put("password", "password");
-    		String url= "jdbc:mysql://127.0.0.1/set_game";
+    		String url= "jdbc:mysql://127.0.0.1:3306/set_game";
     		Connection conn = DriverManager.getConnection(url,p);
     		
     		String logout = "UPDATE Accounts SET LoggedIn = 0 WHERE Username = ?";
@@ -155,10 +159,11 @@ public final class DBUtils {
      * */
     public static void updateRecord(String p1) {
     	try {
+	    Class.forName("com.mysql.jdbc.Driver");
     		Properties p = new Properties();
     		p.put("user","andrew");
     		p.put("password", "password");
-    		String url = "jdbc:mysql://127.0.0.1/set_game";
+    		String url = "jdbc:mysql://127.0.0.1:3306/set_game";
     		Connection conn = DriverManager.getConnection(url,p);
     		 
     		String updateWin = "UPDATE Accounts SET Wins = Wins + 1 WHERE Username = ?";
