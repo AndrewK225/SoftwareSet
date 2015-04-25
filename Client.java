@@ -1,7 +1,10 @@
 import java.awt.*;
-
 import java.awt.event.*;
-//import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -17,6 +20,8 @@ public class Client {
 	static int loginWidth;
 	static int loginHeight;
 	
+	private static String address = "199.98.20.120";
+	private static int port = 4445;
 	
 	private static JFrame mainframe;
 	private static String username;
@@ -29,9 +34,16 @@ public class Client {
 	private static JPanel lobbypanel;
 	private static JPanel gamepanel;
 	
+	private static String line = null;
+	private static BufferedReader br = null;
+	private static BufferedReader is = null;
+	private static PrintWriter os = null;
+	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
 	private static String GAMESTATE = "Game Room State";
+	
+	private static Socket clientSocket;
 	
 	public static void main(String[] args) {
 		screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -58,6 +70,17 @@ public class Client {
 		createLobby();
 		createLogin();
 		
+		try {
+		    clientSocket = new Socket(address, port); // You can use static final constant PORT_NUM
+		    br = new BufferedReader(new InputStreamReader(System.in));
+		    is = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		    os = new PrintWriter(clientSocket.getOutputStream());
+		}
+		catch (IOException e){
+		    e.printStackTrace();
+		    System.err.print("IO Exception");
+		}
+		
 		switchState(LOGIN);
 		mainframe.setSize(loginWidth, loginHeight);
 		mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
@@ -81,7 +104,7 @@ public class Client {
 		JTextField unameText = new JTextField(15);
 		JPasswordField passwdText = new JPasswordField(15);
 		JButton loginButton = new JButton("Login!");
-		JButton registerButton = new JButton("Register");
+		JButton registerButton = new JButton("Register?");
 		
 		loginWidth = 200;
 		loginHeight = 200;
@@ -160,16 +183,89 @@ public class Client {
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				  
-				// display/center the jdialog when the button is pressed
-				JDialog d = new JDialog(mainframe, "Hello", true);
+				username = unameText.getText();
+				password = passwdText.getText();
+				int ret;
+				
+				JTextField uname2Text = new JTextField(15);
+				uname2Text.setText(username);
+				JPasswordField passwd2Text = new JPasswordField(15);
+				passwd2Text.setText(password);
+				JTextField emailText = new JTextField(25);
+				emailText.setText("");
+				JButton regButton = new JButton("Register!");
+				JButton canButton = new JButton("Cancel");
+				
+				JDialog d = new JDialog(mainframe, "Register for a new account?", true);
+				d.setSize(500,200);
+				JPanel p = new JPanel();
+				p.setLayout(new GridLayout(5, 1, 2, 3));
+				//p.add(new JLabel(""));
+				//p.add(new JLabel(""));
+				p.add(new JLabel("Username:"));
+				unameText.setEditable(true);
+				p.add(uname2Text);
+				p.add(new JLabel("Password:"));
+				passwdText.setEditable(true);
+				p.add(passwd2Text);
+				p.add(new JLabel("Email:"));
+				emailText.setEditable(true);
+				p.add(emailText);
+				
+				JLabel status = new JLabel("");
+				//p.add(new JLabel(""));
+				p.add(status);
+				status.setVisible(false);
+				
+				regButton.addActionListener(new ActionListener()
+				{	
+					public void actionPerformed(ActionEvent e)
+					{
+						System.out.println("Register button pressed\n");
+						
+						String email = emailText.getText();
+						username = uname2Text.getText();
+						password = passwd2Text.getText();
+						if ((username.length() > 0) && (password.length() > 0) && (email.length() > 0)) {
+							status.setText("");
+							status.setVisible(false);
+							
+							DBUtils.signUp(username, password, email);
+							
+							line = "L:" + username + ":" + password + "\n";
+							
+							os.println(line);
+			                os.flush();
+						}
+						else {
+							System.out.println("Invalid registration info entered!\n");
+							status.setVisible(true);
+							status.setText("Invalid registration info!");
+							d.pack();
+						}
+					}
+				});
+				
+				canButton.addActionListener(new ActionListener()
+				{	
+					public void actionPerformed(ActionEvent e)
+					{
+						d.dispose();
+					}
+				});
+				
+				p.add(new JLabel(""));
+				p.add(regButton);
+				p.add(canButton);
+				
+				
+				//String message = "<html>Username entered: " + username + "\n<br>Password: " + password + "\n<br></html>";
+				//p.add(new JLabel(message));
+				//p.setSize(500,500);
+				d.add(p);
 				d.setLocationRelativeTo(mainframe);
 				d.setVisible(true);
 				
-				DBUtils.signUp("bob", "123", "t@gmail.com");
-				byte a = DBUtils.signIn("bob", "123");
-				System.out.println(a);
-				DBUtils.signOut("bob");
 				
 			}
 		});
@@ -197,7 +293,7 @@ public class Client {
 				mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
 				mainframe.setLocation(new Point((screenWidth/2) - (loginWidth/2), (screenHeight/2) - (loginHeight/2)));
 				mainframe.pack();
-				System.out.println("CHANGED TO LOGIN\n" + loginpanel.getHeight());
+				System.out.println("CHANGED TO LOGIN\n");
 				break;
 			
 			case LOBBY: 
