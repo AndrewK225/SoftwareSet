@@ -12,18 +12,28 @@ public class Client {
 	static final int GAME = 2;
 	
 	private static JFrame mainframe;
-	private static JPanel mainpanel;
 	private static String username;
 	private static String password;
-	private static int state;
+	private static int currstate;
+	public static Dimension screenSize;
+	
+	private static JPanel states;
+	private static JPanel loginpanel;
+	private static JPanel lobbypanel;
+	private static JPanel gamepanel;
+	
+	private static String LOGINSTATE = "Login Panel State";
+	private static String LOBBYSTATE = "Lobby State";
+	private static String GAMESTATE = "Game Room State";
 	
 	public static void main(String[] args) {
 		mainframe = new JFrame("Set Client");
-		mainpanel = new JPanel();
-		mainframe.setContentPane(mainpanel);
+		states = new JPanel(new CardLayout());
+		mainframe.add(states);
+		mainframe.setContentPane(states);
 		mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		
 		// mainframe.add(mainpanel); // or set as content pane?
 		//mainframe.setLayout();
@@ -36,21 +46,30 @@ public class Client {
 		mainframe.setVisible(true);
 		
 		createLogin();
+		createLobby();
 		
+		switchState(LOGIN);
 		mainframe.pack();
 	}
 	
 	
 	private static void createLogin() {
 
-		JPanel loginpanel = new JPanel();
+		loginpanel = new JPanel();
 		TitledBorder logintitle;
 		JTextField unameText = new JTextField(15);
 		JPasswordField passwdText = new JPasswordField(15);
 		JButton loginButton = new JButton("Login!");
 		JButton registerButton = new JButton("Register");
 		
-		loginpanel.setSize(new Dimension(400, 500));
+		int screenHeight = screenSize.height;
+		int screenWidth = screenSize.width;
+		int panelWidth = 200;
+		int panelHeight = 200;
+		loginpanel.setSize(new Dimension(panelWidth, panelHeight));
+		loginpanel.setPreferredSize(new Dimension(panelWidth, panelHeight));
+		//loginpanel.setLocation(new Point((screenWidth/2) - (panelWidth/2), (screenHeight/2) - (panelHeight/2)));
+		mainframe.setLocation(new Point((screenWidth/2) - (panelWidth/2), (screenHeight/2) - (panelHeight/2)));
 		loginpanel.setOpaque(false);
 		
 		logintitle = BorderFactory.createTitledBorder("Login");
@@ -89,6 +108,14 @@ public class Client {
 				d.add(p);
 				d.setLocationRelativeTo(mainframe);
 				d.setVisible(true);
+				
+				DBUtils.signUp("bob", "123", "t@gmail.com");
+				byte a = DBUtils.signIn("bob", "123");
+				System.out.println(a);
+				DBUtils.signOut("bob");
+				
+				
+				switchState(LOBBY);
 			}
 		});
 		
@@ -107,8 +134,33 @@ public class Client {
 		loginpanel.add(loginButton);
 		loginpanel.add(registerButton);
 		
-		mainpanel.add(loginpanel);
+		states.add(loginpanel, LOGINSTATE);
+		currstate = LOGIN;
+	}
+	
+	private static void createLobby() {
+		lobbypanel = new JPanel();
+		states.add(lobbypanel, LOBBYSTATE);
+	}
+	
+	private static void switchState(int endState) {
+		CardLayout cards = (CardLayout)(states.getLayout());
 		
-		state = LOGIN;
+		switch (endState) {
+			case LOGIN:
+				currstate = LOGIN;
+				cards.show(states, LOGINSTATE);
+				break;
+			
+			case LOBBY: 
+				currstate = LOBBY;
+				cards.show(states, LOBBYSTATE);
+				break;
+				
+			case GAME:
+				currstate = GAME;
+				cards.show(states, GAMESTATE);
+				break;
+		}
 	}
 }
