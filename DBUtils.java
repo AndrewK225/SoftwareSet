@@ -19,26 +19,27 @@ import java.util.Properties;
 
 
 public final class DBUtils {
-
-		
+    
     /* Will add a new user account into the database.*/
     public static void signUp(String user, String clear_pass, String email) {
         try{
         	//wins/losses default to 0. Hash the password
-	                Class.forName("com.mysql.jdbc.Driver");
+	    Class.forName("com.mysql.jdbc.Driver");
 	    String hashed_pass = hash(clear_pass);
             int wins = 0;
             int losses = 0;
             int logged_in = 0; //default, not loggedIn, change to 1 once logged in
            
             
-            //Database login stuff CHANGE IF TESTING LOCALLY OR MAKE A USER WITH THESE CREDENTIALS
-            Properties p = new Properties();
-            p.put("user", "andrew");
-            p.put("password", "password");
+	    String url = "jdbc:mysql://199.98.20.120:3306/set_game";
+    
+	    Properties p = new Properties();
+	    p.put("user", "andrew");
+	    p.put("password", "password");
+           
             
+	    
             //make connection
-            String url = "jdbc:mysql://127.0.0.1:3306/set_game";
             Connection conn = DriverManager.getConnection(url,p);
             
             //check if username already exists
@@ -80,47 +81,49 @@ public final class DBUtils {
     public static byte signIn(String user, String clear_pass) {
     	try {
 	    Class.forName("com.mysql.jdbc.Driver");
-    		String stored_pass = null; 
-    		String entered_pass = null; //hashed version of the user cleartxt password 
+	    String stored_pass = null; 
+	    String entered_pass = null; //hashed version of the user cleartxt password 
     		
     		// access the database
-    		Properties p = new Properties();
-    		p.put("user", "andrew");
-    		p.put("password", "password");
-    		String url= "jdbc:mysql://127.0.0.1:3306/set_game";
-    		Connection conn = DriverManager.getConnection(url,p);
+    	    
+	    String url = "jdbc:mysql://199.98.20.120:3306/set_game";
+    
+	    Properties p = new Properties();
+	    p.put("user", "andrew");
+	    p.put("password", "password");
+	    Connection conn = DriverManager.getConnection(url,p);
     		
     		//query the database
-    		String query_statement = "SELECT Password FROM Accounts WHERE BINARY Username = ?";
-    		PreparedStatement ps = conn.prepareStatement(query_statement);
-    		ps.setString(1, user);
-    		ResultSet rs = ps.executeQuery();
+	    String query_statement = "SELECT Password FROM Accounts WHERE BINARY Username = ?";
+	    PreparedStatement ps = conn.prepareStatement(query_statement);
+	    ps.setString(1, user);
+	    ResultSet rs = ps.executeQuery();
     				
     		//get stored password
-    		if(rs.next()) {
-    			stored_pass = rs.getString("Password");
-    	
-    		} else {  //username not found
-    			conn.close();
-    			return 1;
-    		}
+	    if(rs.next()) {
+		stored_pass = rs.getString("Password");
+		
+	    } else {  //username not found
+		conn.close();
+		return 1;
+	    }
     		
-    		//hash the entered password and see if it matches value in DB
-    		entered_pass = hash(clear_pass);
-    		if(entered_pass.equals(stored_pass)) {
-    			//If all is good, change the LoggedIn field to 1
-    			String make_logged_in = "UPDATE Accounts SET LoggedIn = 1 WHERE Username = ?";
-    			PreparedStatement ps2 = conn.prepareStatement(make_logged_in);
-    			ps2.setString(1, user);
-    			ps2.executeUpdate();
-    			conn.close();
-    			return 0;
-    		}
-    		else { //password doesn't match
-    			conn.close();
-    			return 2;
-    		}
-    		
+	    //hash the entered password and see if it matches value in DB
+	    entered_pass = hash(clear_pass);
+	    if(entered_pass.equals(stored_pass)) {
+		//If all is good, change the LoggedIn field to 1
+		String make_logged_in = "UPDATE Accounts SET LoggedIn = 1 WHERE Username = ?";
+		PreparedStatement ps2 = conn.prepareStatement(make_logged_in);
+		ps2.setString(1, user);
+		ps2.executeUpdate();
+		conn.close();
+		return 0;
+	    }
+	    else { //password doesn't match
+		conn.close();
+		return 2;
+	    }
+	    
     	} catch(Exception e) {
     		System.err.println(e);
     		return 3;
@@ -135,18 +138,20 @@ public final class DBUtils {
     public static int signOut(String user) {
     	try {
 	    Class.forName("com.mysql.jdbc.Driver");
-    		Properties p = new Properties();
-    		p.put("user", "andrew");
-    		p.put("password", "password");
-    		String url= "jdbc:mysql://127.0.0.1:3306/set_game";
-    		Connection conn = DriverManager.getConnection(url,p);
-    		
-    		String logout = "UPDATE Accounts SET LoggedIn = 0 WHERE Username = ?";
-    		PreparedStatement ps = conn.prepareStatement(logout);
-    		ps.setString(1, user);
-    		ps.executeUpdate();
-    		conn.close();
-    		return 1; //when user signs out, return 1
+    	     
+	    String url = "jdbc:mysql://199.98.20.120:3306/set_game";
+    
+	    Properties p = new Properties();
+	    p.put("user", "andrew");
+	    p.put("password", "password");
+	    Connection conn = DriverManager.getConnection(url,p);
+	    
+	    String logout = "UPDATE Accounts SET LoggedIn = 0 WHERE Username = ?";
+	    PreparedStatement ps = conn.prepareStatement(logout);
+	    ps.setString(1, user);
+	    ps.executeUpdate();
+	    conn.close();
+	    return 1; //when user signs out, return 1
     	}catch(Exception e) {
     		System.err.println(e);
     		return 2;
@@ -163,7 +168,7 @@ public final class DBUtils {
     		Properties p = new Properties();
     		p.put("user","andrew");
     		p.put("password", "password");
-    		String url = "jdbc:mysql://127.0.0.1:3306/set_game";
+    		String url = "jdbc:mysql://199.98.20.120:3306/set_game";
     		Connection conn = DriverManager.getConnection(url,p);
     		 
     		String updateWin = "UPDATE Accounts SET Wins = Wins + 1 WHERE Username = ?";
