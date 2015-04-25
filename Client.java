@@ -212,10 +212,11 @@ public class Client {
 				emailText.setEditable(true);
 				p.add(emailText);
 				
-				JLabel status = new JLabel("");
+				JLabel status1 = new JLabel("................................................................................");
 				//p.add(new JLabel(""));
-				p.add(status);
-				status.setVisible(false);
+				p.add(status1);
+				//status.setVisible(false);
+				JLabel status2 = new JLabel("................................................................................");
 				
 				regButton.addActionListener(new ActionListener()
 				{	
@@ -227,8 +228,8 @@ public class Client {
 						username = uname2Text.getText();
 						password = passwd2Text.getText();
 						if ((username.length() > 0) && (password.length() > 0) && (email.length() > 0)) {
-							status.setText("");
-							status.setVisible(false);
+							//status.setText("");
+							//status.setVisible(false);
 							
 							DBUtils.signUp(username, password, email);
 							
@@ -236,11 +237,13 @@ public class Client {
 							
 							os.println(line);
 			                os.flush();
+			                
+			                switchState(LOBBY);
 						}
 						else {
 							System.out.println("Invalid registration info entered!\n");
-							status.setVisible(true);
-							status.setText("Invalid registration info!");
+							status1.setText("Invalid registration info!");
+							status2.setText("");
 							d.pack();
 						}
 					}
@@ -254,7 +257,7 @@ public class Client {
 					}
 				});
 				
-				p.add(new JLabel(""));
+				p.add(status2);
 				p.add(regButton);
 				p.add(canButton);
 				
