@@ -8,12 +8,17 @@ public class Board {
 			cards[num_cards] = deck.drawCard();
 		}
 	}
-	public void displayBoard(){
-		System.out.println("The board contains " + num_cards + " cards.");
+	public String displayBoard(){
+		String retStr = "";
+        System.out.println("The board contains " + num_cards + " cards.");
 		for (int i = 0; i < num_cards; i++){
 			System.out.print(i + "\t");
-			cards[i].printCard();
+			retStr += cards[i].printCard();
+
+            if (i != (num_cards-1))
+                retStr += ":";
 		}
+        return retStr;
 	}
 	public void addTriplet(Deck deck){  //take the top three cards of the deck and put them on the board
 		for (int i = 0; i < 3; i++){
