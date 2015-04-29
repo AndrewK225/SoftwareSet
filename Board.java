@@ -21,7 +21,7 @@ public class Board {
 		}
 		num_cards += 3;
 	}
-	public void addTriplet(Deck deck, int i, int j, int k){ //given the indices of three cards on the board, replace them with the top three cards of the deck
+	public void replaceTriplet(Deck deck, int i, int j, int k){ //given the indices of three cards on the board, replace them with the top three cards of the deck
 		cards[i] = deck.drawCard();
 		cards[j] = deck.drawCard();
 		cards[k] = deck.drawCard();
