@@ -57,10 +57,14 @@ class ServerThread extends Thread{
     	/* This try block provides most of the functionality of the server-side */
     	try {
         	line=is.readLine(); //read the string from client
+        	System.out.println(line);
         	String parts[] = line.split(delims);
         	if(parts[0] == "L") { //Rest of the info is for login
+        		System.out.println("Username: "+parts[1]);
+        		System.out.println("Username: " + parts[2]);
         		int check = DBUtils.signIn(parts[1], parts[2]);
         			//let client know SignIn was successful
+        			System.out.println(check);
         			os.println(check);
         	}
         
