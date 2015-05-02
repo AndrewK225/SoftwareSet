@@ -54,53 +54,44 @@ class ServerThread extends Thread{
     		System.out.println("IO error in server thread");
     	}
     	
-    	/* This try block provides most of the functionality of the server-side */
-    	try {
-        	line=is.readLine(); //read the string from client
-        	System.out.println(line);
-        	String parts[] = line.split(delims);
-        	System.out.println("hmm " + parts[0] + "\n");
-        	System.out.println("Username: "+parts[1]+ "\n" );
-    		System.out.println("Password: " + parts[2]+"\n");
-        	if("L".equals(parts[0])) { //Rest of the info is for login
-        		System.out.println("Usernamev2: "+parts[1]);
-        		System.out.println("Passwordv2: " + parts[2]);
-        		int check = DBUtils.signIn(parts[1], parts[2]);
-        			//let client know SignIn was successful
-        			System.out.println(check);
-        			os.println(check);
-        	}
-        	line=is.readLine();
-        	 
-    	} catch (IOException e) {
-
-    		line=this.getName(); //reused String line for getting thread name
-    		System.out.println("IO Error/ Client "+line+" terminated abruptly");
-    	} catch(NullPointerException e){
-    		line=this.getName(); //reused String line for getting thread name
-    		System.out.println("Client "+line+" Closed");
-    	}
-
-    	finally {    
-    		try{
-    			System.out.println("Connection Closing..");
-    			if (is!=null){
-    				is.close(); 
-    				System.out.println(" Socket Input Stream Closed");
-    			}
-
-    			if(os!=null){
-    				os.close();
-    				System.out.println("Socket Out Closed");
-    			}
-    			if (s!=null){
-    				s.close();
-    				System.out.println("Socket Closed");
-    			}
-
-    		} catch(IOException ie){
-    			System.out.println("Socket Close Error");
-    		}
-    	}//end finally
-    }
+    	/* This block provides most of the functionality of the server-side */
+   		try {
+       		line=is.readLine(); //read the string from client
+       		String parts[] = line.split(delims);
+       		if("L".equals(parts[0])) { //Rest of the info is for login
+       			int check = DBUtils.signIn(parts[1], parts[2]);
+       			//let client know SignIn was successful
+       				System.out.println(check);
+       				os.println(check);
+       				os.flush();
+       				
+       		} 	
+   		}catch (IOException e) {
+   			line=this.getName(); //reused String line for getting thread name
+   			System.out.println("IO Error/ Client "+line+" terminated abruptly");
+   		} catch(NullPointerException e){
+   			line=this.getName(); //reused String line for getting thread name
+   			System.out.println("Client "+line+" Closed");
+   		}
+   		finally {    
+   			try{
+   				System.out.println("Connection Closing..");
+   				if (is!=null){
+   					is.close(); 
+   					System.out.println(" Socket Input Stream Closed");
+   				}
+   				if(os!=null){
+   					os.close();
+   					System.out.println("Socket Out Closed");
+   				}
+   				if (s!=null){
+   					s.close();
+   					System.out.println("Socket Closed");
+   				}
+   			} catch(IOException ie){
+   				System.out.println("Socket Close Error");
+   			}
+   		}//end finally
+   	}
 }
+
