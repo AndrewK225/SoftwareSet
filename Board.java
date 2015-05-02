@@ -26,13 +26,11 @@ public class Board {
 		}
 		num_cards += 3;
 	}
-	
-	public void replaceTriplet(Deck deck, int i, int j, int k) {
-		cards[i] = deck.drawCard();
-		cards[j] = deck.drawCard();
-		cards[k] = deck.drawCard();
+	public void addTriplet(Deck deck, int c1, int c2, int c3){  //take the top three cards of the deck and put them on the board
+		cards[c1] = deck.drawCard();
+		cards[c2] = deck.drawCard();
+		cards[c3] = deck.drawCard();
 	}
-	
     public void removeTriplet(int c1, int c2, int c3){ //removes the card from the board, assuming the board isn't empty.
     	int[] indices = {c1, c2 ,c3};
     	for (int i = 0; i < 3; i++){

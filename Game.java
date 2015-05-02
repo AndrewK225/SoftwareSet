@@ -1,74 +1,53 @@
-//this class contains the Board that is currently active in game. It starts empty, but cards can be added from a given deck, or removed when the player chooses to remove a particular card.
 import java.util.*;
 
-public class Game {
-	
-    public Board gameBoard;
-    public  Deck deck;
-    public HashMap players = new HashMap();
-    public int gameNum;
-    public Game(int num) {
-		gameNum = num;
-        deck = new Deck();
-        // shuffle after this actually works - will see cards in order then, theoretically
-        // deck.shuffle();
-        gameBoard = new Board(deck);
-        // gameBoard has 12 cards now, need to display them to all players in game.
-    }
-    
-    public void addPlayer(String playerName, Player p) {
-		players.put(playerName, p);
-	}
-    
-    public void judgeSet(int i, int j, int k) {
-        // i, j, and k need to be offset by 1 to properly index into the array that starts indexing at 0
-        boolean ret = gameBoard.is_set(i, j, k);
-        
-        if (ret == true) {
-            // If valid set, either replace the 3 cards, or simply remove the 3 cards
-            if (gameBoard.num_cards < 13) {
-                // Make sure there are still cards left in the deck
-                if (deck.num_cards > 0) {
-                    gameBoard.replaceTriplet(deck, i, j, k);
-                }
-            }
-            else {
-                // If more than 12 cards (like 15) in play, remove the 3 cards used to make the set from the array
-                int tmp;
-                // Sort i, j, and k from least to greatest
-				if (j < i) {
-                    tmp = i;
-                    i = j;
-                    j = tmp;
-                }
-                if (k < j) {
-                    tmp = j;
-                    j = k;
-                    k = tmp;
-                }
-				
-                /*
-				gameBoard.cards = ArrayUtils.removeElement(gameBoard.cards, i);
-				j = j-1;
-				gameBoard.cards = ArrayUtils.removeElement(gameBoard.cards, j);
-				k = k-2;
-				gameBoard.cards = ArrayUtils.removeElement(gameBoard.cards, k);
-                */
-            }
-			
-			// After the sizing is in check, see if the game board has a valid set present for players to find
-			ret = gameBoard.is_set();
-			while (ret == false) {
-				gameBoard.addTriplet(deck);
-				ret = gameBoard.is_set();
-			}
-				
-			// Update the players' (in this game) view of this game with the cards on the board
-			// SOME FUNCTION HERE
-			String cardUpdateStr = gameBoard.displayBoard();
-        }
+public class Game{
+		Deck deck;
+		Board board;
+		HashMap players = new HashMap();
+		int gameNum;
+		 public Game(int num){
+			gameNum = num;
+	        deck = new Deck();
+	        // shuffle after this actually works - will see cards in order then, theoretically
+	         deck.shuffle();
+	        board = new Board(deck);
 		
-		// Release the set lock
-    }
-	
+	 //int score = 0; //initialize the player's score to 0
+	 Scanner user_input = new Scanner( System.in );
+     while(deck.num_cards > 2 || (board.is_set())){ //while the deck still has at least 3 cards
+		System.out.println("start of while loop. checking for sets. deck size: " + deck.num_cards + " board size: " + board.num_cards);
+		if ((!board.is_set())&&(deck.num_cards > 2)){ //if there are no sets on the board or if the board has under 12 cards, 
+			//add 3 cards from the deck to the board
+			System.out.println("Adding cards. Deck size: " + deck.num_cards);
+			board.addTriplet(deck);
+		}else{ //if there is at least one set on the board
+			board.displayBoard(); //display the board
+			int index1 = user_input.nextInt( ); //get three inputs from user
+			int index2 = user_input.nextInt( );
+			int index3 = user_input.nextInt( );
+			System.out.println("user input provided. checking if valid set"); 
+			if (board.is_set(index1,index2,index3)){ 
+				if ((board.num_cards) > 12 || (deck.num_cards < 3)){
+					System.out.println("removing 3 cards");
+					board.removeTriplet(index1,index2,index3);
+				}else if (board.num_cards == 12){
+					System.out.println("replacing 3 cards");
+					board.addTriplet(deck,index1,index2,index3);
+				}
+				System.out.println("You found a set!");
+				//score++;
+			}else{
+				System.out.println("Not a set!");
+			}
+		}
+     }
+    user_input.close();
+		 }
 }
+   /*
+    * while game is still going:
+    * 	if the deck has >3 cards and board < 12 cards:
+    * 		add 3 cards 
+  */
+
+
