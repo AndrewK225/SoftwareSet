@@ -36,8 +36,8 @@ public class Client {
 	
 	private static String line = null;
 	private static BufferedReader br = null;
-	private static BufferedReader is = null;
-	private static PrintWriter os = null;
+	private static BufferedReader socketReader = null;
+	private static PrintWriter socketWriter = null;
 	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
@@ -53,7 +53,7 @@ public class Client {
 		mainframe = new JFrame("Set Client");
 		states = new JPanel(new CardLayout());
 		mainframe.add(states);
-		mainframe.setContentPane(states);
+		//mainframe.setContentPane(states);
 		mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		
@@ -73,8 +73,8 @@ public class Client {
 		try {
 		    clientSocket = new Socket(address, port); // You can use static final constant PORT_NUM
 		    br = new BufferedReader(new InputStreamReader(System.in));
-		    is = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		    os = new PrintWriter(clientSocket.getOutputStream());
+		    socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		    socketWriter = new PrintWriter(clientSocket.getOutputStream());
 		}
 		catch (IOException e){
 		    e.printStackTrace();
@@ -139,14 +139,21 @@ public class Client {
 				password = passwdText.getText();
 				unameText.setText("");
 				passwdText.setText("");
-				int ret;
-				if (username.length() > 0) {
-					ret = DBUtils.signIn(username, password);
+				//int ret;
+				
+				String loginStr = "";
+				if (username.length() > 0 && password.length() > 0) {
+					//ret = DBUtils.signIn(username, password);
+					loginStr = "L:" + username + ":" + password;
 				}
 				else {
-					ret = DBUtils.signIn("bob", "123");	
+					loginStr = "L:bob:123";	
 				}
 				
+				socketWriter.println(loginStr);
+				socketWriter.flush();
+				
+				/* Remnants of return value checking when Client accessed DB directly
 				switch(ret) {
 				
 					case 0: 
@@ -160,9 +167,9 @@ public class Client {
 						System.out.println("Wrong password\n");
 				
 				}
+				*/
 				
 				/*
-				
 				// display/center the jdialog when the button is pressed
 				JDialog d = new JDialog(mainframe, "Login Results", true);
 				d.setSize(200,200);
@@ -173,7 +180,6 @@ public class Client {
 				d.add(p);
 				d.setLocationRelativeTo(mainframe);
 				d.setVisible(true);
-				
 				*/
 				
 			}
@@ -227,16 +233,18 @@ public class Client {
 						String email = emailText.getText();
 						username = uname2Text.getText();
 						password = passwd2Text.getText();
+						
+						String regisStr = "";
 						if ((username.length() > 0) && (password.length() > 0) && (email.length() > 0)) {
 							//status.setText("");
 							//status.setVisible(false);
 							
-							DBUtils.signUp(username, password, email);
+							//DBUtils.signUp(username, password, email);
 							
-							line = "L:" + username + ":" + password + "\n";
+							regisStr = "R:" + username + ":" + password;
 							
-							os.println(line);
-			                os.flush();
+							socketWriter.println(regisStr);
+							socketWriter.flush();
 			                
 			                switchState(LOBBY);
 						}
