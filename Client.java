@@ -20,8 +20,8 @@ public class Client {
 	static int loginWidth;
 	static int loginHeight;
 	
-	//private static String address = "199.98.20.120";
-	private static String address = "localhost";
+	private static String address = "199.98.20.120";
+	//private static String address = "localhost";
 	private static int port = 4445;
 	
 	private static JFrame mainframe;
@@ -263,12 +263,12 @@ public class Client {
 							
 							//DBUtils.signUp(username, password, email);
 							
-							regisStr = "R:" + username + ":" + password;
+							regisStr = "R:" + username + ":" + password + ":" + email;
 							
 							socketWriter.println(regisStr);
 							socketWriter.flush();
 			                
-			                switchState(LOBBY);
+			                //switchState(LOBBY);
 						}
 						else {
 							System.out.println("Invalid registration info entered!\n");
