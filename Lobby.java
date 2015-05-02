@@ -19,4 +19,13 @@ public class Lobby {
 	public void removePlayer(Player p) {
 		players.remove(p.name);
 	}
+	
+	public String showPlayers() {
+		String active = "LBYACTIVE:";
+		for(String key:players.keySet()) {
+			active = active + key +"\n";
+		}
+		return active;
+		
+	}
 }

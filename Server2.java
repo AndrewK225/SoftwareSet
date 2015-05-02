@@ -61,14 +61,19 @@ class ServerThread extends Thread{
     		System.out.println("IO error in server thread");
     	}
     	
-    	/* This block provides the signIn and signUP functionality */
-    	
+    	/* This block provides the signIn and signUP functionality */    	
     	while (!line.equals("X:bye")) {
 			try {
-				if (is != null)
+				if (is != null) {
 					line = is.readLine();
-				else
+					String toks[] = line.split(delims);
+					if("GC".equals(toks[0])) {
+						int choice = Integer.parseInt(toks[1]);
+					}
+				}
+				else {
 					line = "X:bye";
+				}
 				System.out.println("Client said: " + line);
 				parseString(line);					
 			}
@@ -143,6 +148,8 @@ class ServerThread extends Thread{
    			os.flush();	
    			p = new Player(parts[1]);
    			lobby.addPlayer(p);
+   			os.println(lobby.showPlayers());
+   			os.flush();
    		}
    		//If R:user:pass:email, used for registration
    		if("R".equals(parts[0])) {
@@ -155,8 +162,9 @@ class ServerThread extends Thread{
    			try {
 				s.close();
 				is = null;
-				os = null;
 				lobby.removePlayer(p);
+				os.println(lobby.showPlayers());
+				os = null;
 				System.out.println("Closing connect to thread for player: " + p.name + "\n");
 			}
    			catch (IOException e) {
