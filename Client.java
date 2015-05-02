@@ -20,7 +20,8 @@ public class Client {
 	static int loginWidth;
 	static int loginHeight;
 	
-	private static String address = "199.98.20.120";
+	//private static String address = "199.98.20.120";
+	private static String address = "localhost";
 	private static int port = 4445;
 	
 	private static JFrame mainframe;
@@ -34,7 +35,7 @@ public class Client {
 	private static JPanel lobbypanel;
 	private static JPanel gamepanel;
 	
-	private static String line = null;
+	private static String line = "";
 	private static BufferedReader br = null;
 	private static BufferedReader socketReader = null;
 	private static PrintWriter socketWriter = null;
@@ -70,30 +71,51 @@ public class Client {
 		createLobby();
 		createLogin();
 		
-		try {
-		    clientSocket = new Socket(address, port); // You can use static final constant PORT_NUM
-		    br = new BufferedReader(new InputStreamReader(System.in));
-		    socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		    socketWriter = new PrintWriter(clientSocket.getOutputStream());
-		}
-		catch (IOException e){
-		    e.printStackTrace();
-		    System.err.print("IO Exception");
+		int connectAttempt = 0;
+		while (clientSocket == null) {
+			try {
+			    clientSocket = new Socket(address, port); // You can use static final constant PORT_NUM
+			    br = new BufferedReader(new InputStreamReader(System.in));
+			    socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			    socketWriter = new PrintWriter(clientSocket.getOutputStream());
+			}
+			
+			catch (IOException e){
+			    //e.printStackTrace();
+				connectAttempt++;
+			    if (connectAttempt == 1)
+			    	System.err.print("IO Exception: Connecting to " + address + ":" +port + " failed\n");
+			}
 		}
 		
-		switchState(LOGIN);
-		mainframe.setSize(loginWidth, loginHeight);
-		mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
-		mainframe.pack();
-		
-		mainframe.addWindowListener(new WindowAdapter() {
-		 
-	        public void windowClosing(WindowEvent e) {
-	        	System.out.println("Exiting...\n");
-	        	// Check if logout required
-	        	System.exit(0);
-	        }
-		});
+		if (clientSocket != null) { 
+			switchState(LOGIN);
+			mainframe.setSize(loginWidth, loginHeight);
+			mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
+			mainframe.pack();
+			
+			mainframe.addWindowListener(new WindowAdapter() {
+			 
+		        public void windowClosing(WindowEvent e) {
+		        	System.out.println("Exiting...\n");
+		        	// Check if logout required
+		        	System.exit(0);
+		        }
+			});
+			
+			
+			while (!line.equals("X:bye")) {
+				try {
+					line = socketReader.readLine();
+					System.out.println("Server said: " + line);
+					
+				}
+				catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	
@@ -132,7 +154,7 @@ public class Client {
 		
 		
 		loginButton.addActionListener(new ActionListener()
-		{	
+		{
 			public void actionPerformed(ActionEvent e)
 			{
 				username = unameText.getText();
@@ -295,12 +317,12 @@ public class Client {
 	}
 	
 	private static void switchState(int endState) {
-		CardLayout cards = (CardLayout)(states.getLayout());
+		CardLayout frames = (CardLayout)(states.getLayout());
 		
 		switch (endState) {
 			case LOGIN:
 				currstate = LOGIN;
-				cards.show(states, LOGINSTATE);
+				frames.show(states, LOGINSTATE);
 				mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
 				mainframe.setLocation(new Point((screenWidth/2) - (loginWidth/2), (screenHeight/2) - (loginHeight/2)));
 				mainframe.pack();
@@ -309,7 +331,7 @@ public class Client {
 			
 			case LOBBY: 
 				currstate = LOBBY;
-				cards.show(states, LOBBYSTATE);
+				frames.show(states, LOBBYSTATE);
 				mainframe.setPreferredSize(screenSize);
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
@@ -318,7 +340,7 @@ public class Client {
 				
 			case GAME:
 				currstate = GAME;
-				cards.show(states, GAMESTATE);
+				frames.show(states, GAMESTATE);
 				mainframe.setPreferredSize(screenSize);
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
