@@ -6,9 +6,12 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-
 public class Server2 {
+
+	public static Lobby lobby = new Lobby(3);
+	
 	public static void main(String args[]){
+		
 		Socket s=null;
 		ServerSocket ss2=null;
 		try{
@@ -23,7 +26,7 @@ public class Server2 {
 			try{
 				s= ss2.accept();
 				System.out.println("connection Established");
-				ServerThread st=new ServerThread(s);
+				ServerThread st=new ServerThread(s,lobby);
 				st.start();
 			} catch(Exception e){
 				e.printStackTrace();
@@ -36,7 +39,7 @@ public class Server2 {
 }
 
 class ServerThread extends Thread{  
-
+	Lobby lobby = null;
 	Player p = null;
     String line = null;
     BufferedReader  is = null;
@@ -44,8 +47,9 @@ class ServerThread extends Thread{
     Socket s = null;
     String delims = ":";
     int check = 0;
-    public ServerThread(Socket s){
+    public ServerThread(Socket s,Lobby mainlobby){
         this.s=s;
+        lobby = mainlobby;
     }
 
     public void run() {
@@ -69,6 +73,7 @@ class ServerThread extends Thread{
        			os.println("L:"+check);
        			os.flush();	
        			p = new Player(parts[1]);
+       			lobby.addPlayer(p);
        		}
        		//If R:user:pass:email, used for registration
        		if("R".equals(parts[0])) {
