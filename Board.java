@@ -2,13 +2,13 @@
 
 public class Board {
 	int num_cards;
-	Card[] cards = new Card[21];
-	public Board(Deck deck){
+	Card[] cards = new Card[21]; //board is capped at 21 cards
+	public Board(Deck deck){ //create a new board, drawing the top 12 cards from a given deck
 		for (num_cards = 0; num_cards<12;num_cards++){
 			cards[num_cards] = deck.drawCard();
 		}
 	}
-	public String displayBoard(){
+	public String displayBoard(){ // display, in order, the contents of the board
 		String retStr = "";
         System.out.println("The board contains " + num_cards + " cards.");
 		for (int i = 0; i < num_cards; i++){
@@ -26,11 +26,24 @@ public class Board {
 		}
 		num_cards += 3;
 	}
-	public void replaceTriplet(Deck deck, int i, int j, int k){ //given the indices of three cards on the board, replace them with the top three cards of the deck
-		cards[i] = deck.drawCard();
-		cards[j] = deck.drawCard();
-		cards[k] = deck.drawCard();
-	}
+    public void removeTriplet(int c1, int c2, int c3){ //removes the card from the board, assuming the board isn't empty.
+    	int[] indices = {c1, c2 ,c3};
+    	for (int i = 0; i < 3; i++){
+    		for (int j = 0; j < 2; j++){
+    			if (indices[j] < indices[j+1]){
+    				int temp = indices[j];
+    				indices[j] = indices[j+1];
+    				indices[j+1] = temp;
+    			} 
+    		}
+    	}
+    	for (int i =0; i < 3; i++){
+    		for (int j = indices[i]; j < num_cards-1; j++){
+        		cards[j] = cards[j+1];
+        	}
+        	num_cards--;
+    	}
+    }
 	public boolean is_set(int i, int j, int k){ //given the indices of three cards on the board, do they form a set?
 		//System.out.println("Calling is_set for particular triplet " + i + "\t" + j + "\t" + k);
 		if ((cards[i]).color != (cards[j]).color){
@@ -88,5 +101,5 @@ public class Board {
 			}
 		}
 		return false;
-	}
+	} 
 }

@@ -1,38 +1,39 @@
+//this class simulates an instance of a game
 import java.util.Scanner;
 
 public class Set {
 	public static void main(String[] args){
-		int score = 0;
-		Scanner user_input = new Scanner( System.in );
-		Deck A = new Deck();
-		A.shuffle();
-		Board B = new Board(A);
+		int score = 0; //initialize the player's score to 0
+		Scanner user_input = new Scanner( System.in ); 
+		Deck A = new Deck();//create a new deck
+		A.shuffle(); //shuffle the deck
+		Board B = new Board(A); //create a new board
 		//B.displayBoard();
-		System.out.println("initialized board. checking for sets");
-		while (!B.is_set()){
-			B.addTriplet(A);
-		}
-		while(A.num_cards > 2){
+		//while (!B.is_set()){ //if this board doesn't contain a set, add a set
+			//B.addTriplet(A);
+		//}
+		while(A.num_cards > 2){ //while the deck still has at least 3 cards
 			System.out.println("start of while loop. checking for sets. deck size: " + A.num_cards + " board size: " + B.num_cards);
-			if (!B.is_set()){
+			if ((!B.is_set())||(B.num_cards < 12)){ //if there are no sets on the board or if the board has under 12 cards, 
+				//add 3 cards from the deck to the board
 				System.out.println("Adding cards. Deck size: " + A.num_cards);
 				B.addTriplet(A);
-				System.out.println("Added cards. Deck size: " + A.num_cards);
-			}else{
-				B.displayBoard();
-				int s1 = user_input.nextInt( );
+			}else{ //if there is at least one set on the board
+				B.displayBoard(); //display the board
+				int s1 = user_input.nextInt( ); //get three inputs from user
 				int s2 = user_input.nextInt( );
 				int s3 = user_input.nextInt( );
-				System.out.println("user input provided. checking if valid set");
-				if (B.is_set(s1,s2,s3)){
-					B.addTriplet(A,s1,s2,s3);
+				System.out.println("user input provided. checking if valid set"); 
+				if (B.is_set(s1,s2,s3)){ 
+					B.removeTriplet(s1,s2,s3);
+					System.out.println("Removing triplet!");
+					B.displayBoard();
 					System.out.println("You found a set!");
 					score++;
 				}else{
 					System.out.println("Not a set!");
 				}
 			}
-		
 		}
 		user_input.close();
 	}

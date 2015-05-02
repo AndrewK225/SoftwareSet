@@ -1,3 +1,4 @@
+//this class contains the representation of a card, and a way to print the card
 
 public class Card{
  	public String color; //color = "purple" OR "green" OR "red"
@@ -51,4 +52,6 @@ public class Card{
         retStr += "-SHADEUNKNOWN-";
 
     return retStr;
- } 
+ }
+ 	
+}
