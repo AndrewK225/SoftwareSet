@@ -21,7 +21,7 @@ public class Lobby {
 	}
 	
 	public String showPlayers() {
-		String active = "";
+		String active = "LBYACTIVE:";
 		for(String key:players.keySet()) {
 			active = active + key +"\n";
 		}
