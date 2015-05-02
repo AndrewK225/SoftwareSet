@@ -41,6 +41,7 @@ class ServerThread extends Thread{
     PrintWriter os = null;
     Socket s = null;
     String delims = ":";
+    int check = 0;
     public ServerThread(Socket s){
         this.s=s;
     }
@@ -58,14 +59,20 @@ class ServerThread extends Thread{
    		try {
        		line=is.readLine(); //read the string from client
        		String parts[] = line.split(delims);
-       		if("L".equals(parts[0])) { //Rest of the info is for login
-       			int check = DBUtils.signIn(parts[1], parts[2]);
-       			//let client know SignIn was successful
-       				System.out.println(check);
-       				os.println(check);
-       				os.flush();
-       				
-       		} 	
+       		//If L:user:pass , its for login
+       		if("L".equals(parts[0])) {
+       			check = DBUtils.signIn(parts[1], parts[2]);
+       			//let client know how SignIn went
+       			System.out.println(check);
+       			os.println("L:"+check);
+       			os.flush();	
+       		}
+       		if("R".equals(parts[0])) {
+       			check = DBUtils.signUp(parts[1], parts[2], parts[3]);
+       			System.out.println(check);
+       			os.println("R:"+check);
+       			os.flush();
+       		}
    		}catch (IOException e) {
    			line=this.getName(); //reused String line for getting thread name
    			System.out.println("IO Error/ Client "+line+" terminated abruptly");
@@ -73,6 +80,8 @@ class ServerThread extends Thread{
    			line=this.getName(); //reused String line for getting thread name
    			System.out.println("Client "+line+" Closed");
    		}
+   		
+   		/*
    		finally {    
    			try{
    				System.out.println("Connection Closing..");
@@ -92,6 +101,7 @@ class ServerThread extends Thread{
    				System.out.println("Socket Close Error");
    			}
    		}//end finally
+   		*/
    	}
 }
 

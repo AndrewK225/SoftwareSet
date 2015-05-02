@@ -20,22 +20,25 @@ import java.util.Properties;
 
 public final class DBUtils {
     
-    /* Will add a new user account into the database.*/
-    public static void signUp(String user, String clear_pass, String email) {
+    /* Will add a new user account into the database.
+     * 0 on success
+     * 1 if username already exists
+     * 2 if some exception occurs while accessing database*/
+    public static int signUp(String user, String clear_pass, String email) {
         try{
         	//wins/losses default to 0. Hash the password
-	    Class.forName("com.mysql.jdbc.Driver");
-	    String hashed_pass = hash(clear_pass);
+        	Class.forName("com.mysql.jdbc.Driver");
+        	String hashed_pass = hash(clear_pass);
             int wins = 0;
             int losses = 0;
             int logged_in = 0; //default, not loggedIn, change to 1 once logged in
            
             
-	    String url = "jdbc:mysql://199.98.20.120:3306/set_game";
+            String url = "jdbc:mysql://199.98.20.120:3306/set_game";
     
-	    Properties p = new Properties();
-	    p.put("user", "andrew");
-	    p.put("password", "password");
+            Properties p = new Properties();
+            p.put("user", "andrew");
+            p.put("password", "password");
            
             
 	    
@@ -47,8 +50,9 @@ public final class DBUtils {
             PreparedStatement ps = conn.prepareStatement(check_username);
             ps.setString(1, user);
             ResultSet rs = ps.executeQuery();
+            
             if(!rs.next()) {
-                //Insert username into database
+            	//Insert username into database
             	String insert_statement = "INSERT INTO Accounts (Username, Password, Email, Wins, Losses,LoggedIn) VALUE(?,?,?,?,?,?)";
             	PreparedStatement ps2 = conn.prepareStatement(insert_statement);
             	ps2.setString(1,user);
@@ -59,20 +63,23 @@ public final class DBUtils {
             	ps2.setInt(6, logged_in);
             	ps2.executeUpdate();
             	conn.close();
+            	return 0;
             } else {
             	//WE SHOULD PROBABLY REPROMPT FOR ANOTHER USERNAME
             	System.out.println("Username already exists");
             	conn.close();
+            	return 1;
             }
             
         } catch(Exception e) {
         	System.err.println(e);
+        	return 2;
         }
     }
 
     /* Query database for user account.
      * returns 0 for success
-     * return 1 for username error
+     * return 1 for user name error
      * return 2 for password error
      * return 3 for exception
      * 
@@ -101,27 +108,27 @@ public final class DBUtils {
     				
     		//get stored password
 	    if(rs.next()) {
-		stored_pass = rs.getString("Password");
+	    	stored_pass = rs.getString("Password");
 		
 	    } else {  //username not found
-		conn.close();
-		return 1;
+	    	conn.close();
+	    	return 1;
 	    }
     		
 	    //hash the entered password and see if it matches value in DB
 	    entered_pass = hash(clear_pass);
 	    if(entered_pass.equals(stored_pass)) {
-		//If all is good, change the LoggedIn field to 1
-		String make_logged_in = "UPDATE Accounts SET LoggedIn = 1 WHERE Username = ?";
-		PreparedStatement ps2 = conn.prepareStatement(make_logged_in);
-		ps2.setString(1, user);
-		ps2.executeUpdate();
-		conn.close();
-		return 0;
+	    	//If all is good, change the LoggedIn field to 1
+	    	String make_logged_in = "UPDATE Accounts SET LoggedIn = 1 WHERE Username = ?";
+	    	PreparedStatement ps2 = conn.prepareStatement(make_logged_in);
+	    	ps2.setString(1, user);
+	    	ps2.executeUpdate();
+	    	conn.close();
+	    	return 0;
 	    }
 	    else { //password doesn't match
-		conn.close();
-		return 2;
+	    	conn.close();
+	    	return 2;
 	    }
 	    
     	} catch(Exception e) {
