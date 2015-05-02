@@ -78,7 +78,7 @@ public final class DBUtils {
      * 
      * If all is good, change LoggedIn to 1.
      * */
-    public static byte signIn(String user, String clear_pass) {
+    public static int signIn(String user, String clear_pass) {
     	try {
 	    Class.forName("com.mysql.jdbc.Driver");
 	    String stored_pass = null; 
