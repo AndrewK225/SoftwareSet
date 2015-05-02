@@ -62,7 +62,7 @@ class ServerThread extends Thread{
         	System.out.println("hmm " + parts[0] + "\n");
         	System.out.println("Username: "+parts[1]+ "\n" );
     		System.out.println("Password: " + parts[2]+"\n");
-        	if(parts[0] == "L") { //Rest of the info is for login
+        	if("L".equals(parts[0])) { //Rest of the info is for login
         		System.out.println("Usernamev2: "+parts[1]);
         		System.out.println("Passwordv2: " + parts[2]);
         		int check = DBUtils.signIn(parts[1], parts[2]);
