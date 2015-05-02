@@ -59,12 +59,12 @@ class ServerThread extends Thread{
         	line=is.readLine(); //read the string from client
         	System.out.println(line);
         	String parts[] = line.split(delims);
-        	System.out.println("hmm " + parts[0]);
-        	System.out.println("Username: "+parts[1]);
-    		System.out.println("Password: " + parts[2]);
+        	System.out.println("hmm " + parts[0] + "\n");
+        	System.out.println("Username: "+parts[1]+ "\n" );
+    		System.out.println("Password: " + parts[2]+"\n");
         	if(parts[0] == "L") { //Rest of the info is for login
-        		System.out.println("Username: "+parts[1]);
-        		System.out.println("Username: " + parts[2]);
+        		System.out.println("Usernamev2: "+parts[1]);
+        		System.out.println("Passwordv2: " + parts[2]);
         		int check = DBUtils.signIn(parts[1], parts[2]);
         			//let client know SignIn was successful
         			System.out.println(check);
