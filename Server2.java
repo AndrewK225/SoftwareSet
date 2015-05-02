@@ -55,7 +55,7 @@ class ServerThread extends Thread{
     		System.out.println("IO error in server thread");
     	}
     	
-    	/* This block provides most of the functionality of the server-side */
+    	/* This block provides the signIn and signUP functionality*/
    		try {
        		line=is.readLine(); //read the string from client
        		String parts[] = line.split(delims);
@@ -67,6 +67,7 @@ class ServerThread extends Thread{
        			os.println("L:"+check);
        			os.flush();	
        		}
+       		//If R:user:pass:email, used for registration
        		if("R".equals(parts[0])) {
        			check = DBUtils.signUp(parts[1], parts[2], parts[3]);
        			System.out.println(check);
