@@ -156,6 +156,7 @@ class ServerThread extends Thread{
 				s.close();
 				is = null;
 				os = null;
+				lobby.removePlayer(p);
 				System.out.println("Closing connect to thread for player: " + p.name + "\n");
 			}
    			catch (IOException e) {
@@ -165,4 +166,3 @@ class ServerThread extends Thread{
    		}
     }
 }
-
