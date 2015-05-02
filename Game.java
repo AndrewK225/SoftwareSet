@@ -16,11 +16,11 @@ public class Game {
         // gameBoard has 12 cards now, need to display them to all players in game.
     }
     
-    public void addPlayer(int playerID, String playerName) {
-		players.put(playerID, playerName);
+    public void addPlayer(String playerName, Player p) {
+		players.put(playerName, p);
 	}
     
-    public boolean judgeSet(int i, int j, int k) {
+    public void judgeSet(int i, int j, int k) {
         // i, j, and k need to be offset by 1 to properly index into the array that starts indexing at 0
         boolean ret = gameBoard.is_set(i, j, k);
         
@@ -47,17 +47,19 @@ public class Game {
                     k = tmp;
                 }
 				
+                /*
 				gameBoard.cards = ArrayUtils.removeElement(gameBoard.cards, i);
 				j = j-1;
 				gameBoard.cards = ArrayUtils.removeElement(gameBoard.cards, j);
 				k = k-2;
 				gameBoard.cards = ArrayUtils.removeElement(gameBoard.cards, k);
+                */
             }
 			
 			// After the sizing is in check, see if the game board has a valid set present for players to find
 			ret = gameBoard.is_set();
 			while (ret == false) {
-				gameBoard.addTriplet(gameBoard.deck);
+				gameBoard.addTriplet(deck);
 				ret = gameBoard.is_set();
 			}
 				

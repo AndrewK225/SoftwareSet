@@ -39,14 +39,14 @@ public class Server2 {
 }
 
 class ServerThread extends Thread{  
-	Lobby lobby = null;
-	Player p = null;
-    String line = null;
-    BufferedReader  is = null;
-    PrintWriter os = null;
-    Socket s = null;
-    String delims = ":";
-    int check = 0;
+	private static Lobby lobby = null;
+	private static Player p = null;
+    private static String line = "";
+    private static BufferedReader  is = null;
+    private static PrintWriter os = null;
+    private static Socket s = null;
+    private static String delims = ":";
+    private static int check = 0;
     public ServerThread(Socket s,Lobby mainlobby){
         this.s=s;
         lobby = mainlobby;
@@ -62,6 +62,23 @@ class ServerThread extends Thread{
     	}
     	
     	/* This block provides the signIn and signUP functionality */
+    	
+    	while (!line.equals("X:bye")) {
+			try {
+				if (is != null)
+					line = is.readLine();
+				else
+					line = "X:bye";
+				System.out.println("Client said: " + line);
+				parseString(line);					
+			}
+			catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+    	
+    	/*
    		try {
        		line=is.readLine(); //read the string from client
        		String parts[] = line.split(delims);
@@ -89,7 +106,9 @@ class ServerThread extends Thread{
    			line=this.getName(); //reused String line for getting thread name
    			System.out.println("Client "+line+" Closed");
    		}
-   		
+   		*/
+    	
+    	
    		/*
    		finally {    
    			try{
@@ -112,5 +131,38 @@ class ServerThread extends Thread{
    		}//end finally
    		*/
    	}
+    
+    private static void parseString(String clientLine) {
+    	String parts[] = clientLine.split(delims);
+   		//If L:user:pass , its for login
+   		if("L".equals(parts[0])) {
+   			check = DBUtils.signIn(parts[1], parts[2]);
+   			//let client know how SignIn went
+   			System.out.println(check);
+   			os.println("L:"+check);
+   			os.flush();	
+   			p = new Player(parts[1]);
+   			lobby.addPlayer(p);
+   		}
+   		//If R:user:pass:email, used for registration
+   		if("R".equals(parts[0])) {
+   			check = DBUtils.signUp(parts[1], parts[2], parts[3]);
+   			System.out.println(check);
+   			os.println("R:"+check);
+   			os.flush();
+   		}
+   		if("X".equals(parts[0])) {
+   			try {
+				s.close();
+				is = null;
+				os = null;
+				System.out.println("Closing connect to thread for player: " + p.name + "\n");
+			}
+   			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+   		}
+    }
 }
 
