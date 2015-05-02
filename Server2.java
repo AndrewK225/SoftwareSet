@@ -19,6 +19,7 @@ public class Server2 {
 		}
 
 		while(true){
+			System.out.println("While(true)");
 			try{
 				s= ss2.accept();
 				System.out.println("connection Established");
@@ -36,6 +37,7 @@ public class Server2 {
 
 class ServerThread extends Thread{  
 
+	Player p = null;
     String line = null;
     BufferedReader  is = null;
     PrintWriter os = null;
@@ -55,7 +57,7 @@ class ServerThread extends Thread{
     		System.out.println("IO error in server thread");
     	}
     	
-    	/* This block provides the signIn and signUP functionality*/
+    	/* This block provides the signIn and signUP functionality */
    		try {
        		line=is.readLine(); //read the string from client
        		String parts[] = line.split(delims);
@@ -66,6 +68,7 @@ class ServerThread extends Thread{
        			System.out.println(check);
        			os.println("L:"+check);
        			os.flush();	
+       			p = new Player(parts[1]);
        		}
        		//If R:user:pass:email, used for registration
        		if("R".equals(parts[0])) {
