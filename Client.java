@@ -51,6 +51,7 @@ public class Client {
 	
 	private static JTextArea chatList = null;
 	private static JTextArea activePlayersList = null; 
+	private static JScrollPane activePlayersBox = null;
 	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
@@ -186,31 +187,14 @@ public class Client {
 				String loginStr = "";
 				if (username.length() > 0 && password.length() > 0) {
 					//ret = DBUtils.signIn(username, password);
-					loginStr = "L:" + username + ":" + password;
+					loginStr = "LOGIN:" + username + ":" + password;
 				}
 				else {
-					loginStr = "L:TaylorSwift:tswift";	
+					loginStr = "LOGIN:TaylorSwift:tswift";	
 				}
 				
-				/*
-				socketWriter.println(loginStr);
-				socketWriter.flush();
-				*/
 				System.out.println("Attempting to login with: " + loginStr);
 				sendMessage(loginStr);
-				
-				/*
-				// display/center the jdialog when the button is pressed
-				JDialog d = new JDialog(mainframe, "Login Results", true);
-				d.setSize(200,200);
-				JPanel p = new JPanel();
-				String message = "<html>Username entered: " + username + "\n<br>Password: " + password + "\n<br></html>";
-				p.add(new JLabel(message));
-				p.setSize(500,500);
-				d.add(p);
-				d.setLocationRelativeTo(mainframe);
-				d.setVisible(true);
-				*/
 				
 			}
 		});
@@ -236,8 +220,7 @@ public class Client {
 				d.setSize(500,200);
 				JPanel p = new JPanel();
 				p.setLayout(new GridLayout(5, 1, 2, 3));
-				//p.add(new JLabel(""));
-				//p.add(new JLabel(""));
+
 				p.add(new JLabel("Username:"));
 				unameText.setEditable(true);
 				p.add(uname2Text);
@@ -249,9 +232,7 @@ public class Client {
 				p.add(emailText);
 				
 				JLabel status1 = new JLabel("................................................................................");
-				//p.add(new JLabel(""));
 				p.add(status1);
-				//status.setVisible(false);
 				JLabel status2 = new JLabel("................................................................................");
 				
 				regButton.addActionListener(new ActionListener()
@@ -266,18 +247,8 @@ public class Client {
 						
 						String regisStr = "";
 						if ((username.length() > 0) && (password.length() > 0) && (email.length() > 0)) {
-							//status.setText("");
-							//status.setVisible(false);
 							
-							//DBUtils.signUp(username, password, email);
-							
-							regisStr = "R:" + username + ":" + password + ":" + email;
-							
-							/*
-							socketWriter.println(regisStr);
-							socketWriter.flush();
-			                */
-							
+							regisStr = "REGISTER:" + username + ":" + password + ":" + email;
 							sendMessage(regisStr);
 							
 			                //switchState(LOBBY);
@@ -303,7 +274,6 @@ public class Client {
 				p.add(regButton);
 				p.add(canButton);
 				
-				
 				//String message = "<html>Username entered: " + username + "\n<br>Password: " + password + "\n<br></html>";
 				//p.add(new JLabel(message));
 				//p.setSize(500,500);
@@ -326,7 +296,6 @@ public class Client {
 		lobbypanel.setSize(new Dimension(screenWidth, screenHeight));
 		lobbypanel.setPreferredSize(new Dimension(screenWidth, screenHeight));
 		
-		JScrollPane activePlayersBox;
 	    screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		screenHeight = screenSize.height;
 		screenWidth = screenSize.width;
@@ -334,6 +303,10 @@ public class Client {
 		int chatBoxWidth = screenWidth;
 		int chatBoxHeight = 200;
 		int activePlayersBoxHeight = screenHeight - chatBoxHeight - 30;
+		int gameBtnWidth = screenWidth/6;
+	    int gameBtnHeight = 200;
+	    int activePlayersBoxWidth = gameBtnWidth;
+	    screenWidth = screenWidth - activePlayersBoxWidth;
 		
 	    lobbypanel.setPreferredSize(screenSize);
 	    lobbypanel.setLayout(null);
@@ -342,14 +315,9 @@ public class Client {
 	    JButton game1 = new JButton("Game1");
 	    game1.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
+	    		// Tell server game 1 chosen...
 	    	}
 	    });
-	    int gameBtnWidth = screenWidth/6;
-	    int gameBtnHeight = 200;
-	    int activePlayersBoxWidth = gameBtnWidth;
-	    
-	    screenWidth = screenWidth - activePlayersBoxWidth;
-	    
 	    game1.setBounds((screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
 	    lobbypanel.add(game1);
 	    
@@ -357,6 +325,7 @@ public class Client {
 	    JButton game2 = new JButton("Game2");
 	    game2.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent arg0) {
+	    		// Tell server game 2 chosen...
 	    	}
 	    });
 	    game2.setBounds((3*screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
@@ -366,6 +335,7 @@ public class Client {
 	    JButton game3 = new JButton("Game3");
 	    game3.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
+	    		// Tell server game 3 chosen...
 	    	}
 	    });
 	    game3.setBounds((5*screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
@@ -500,7 +470,10 @@ public class Client {
 		}
 		
 		if ("LBYACTIVE".equals(parts[0])) {
+			System.out.println("Got active players list of:\n" + parts[1]);
 			activePlayersList.setText(parts[1]);
+			activePlayersBox.setViewportView(activePlayersList);
+			//mainframe.pack();
 		}
 	}
 	

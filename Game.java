@@ -61,8 +61,9 @@ public class Game{
 				board.addTriplet(deck,input1,input2,input3);
 			}
 			System.out.println("You found a set!");
-			players.get(name).score++;
-		}else{
+			players.get(name).score_point();
+		}
+		else{
 			System.out.println("Not a set!");
 		}
 	}
