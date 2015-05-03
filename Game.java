@@ -3,13 +3,13 @@ import java.util.*;
 public class Game{
 	Deck deck;
 	Board board;
-	Timer timer;
 	HashMap <String, Player> players;
+	Timer timer;
 	boolean lock_set = false;
 	int gameNum;
-	int[] inputs = {-1 -1 -1};
-	int num_inputs = 0;
 	Player declare_set_player;
+	int[] inputs;
+	int num_inputs = 0;
 	public void addPlayer(String name, Player player){
 		players.put(name,player);
 	}
@@ -18,17 +18,25 @@ public class Game{
 	}
 	public void declare_set(String name){
 		lock_set = true;
+		timer = new Timer();
+		timer.schedule(new Release_lock(),5000);
 		declare_set_player = players.get(name);
 	}
-	public void enter_card(int index){
-		inputs[num_inputs] = index;
-		num_inputs++;
-	}
-	public void release_lock(){
-		lock_set = false;
+	
+	class Release_lock extends TimerTask{
+		public void run(){
+			lock_set = false;
+			num_inputs = 0;
+		}
 	}
 	public boolean is_over(){
 		return ((deck.num_cards < 3) && (!board.is_set())); 
+	}
+	public void enter_input(int x){
+		if (num_inputs < 3){
+			inputs[num_inputs] = x;
+			num_inputs++;
+		}
 	}
 	public void loop(){
 		//this is the function that keeps being called as the game is running
@@ -37,8 +45,13 @@ public class Game{
 			//System.out.println("Adding cards. Deck size: " + deck.num_cards);
 			board.addTriplet(deck);
 		}
+		if((lock_set) && (num_inputs == 3)){
+			process_input(declare_set_player.name,inputs[0],inputs[1],inputs[2]);
+			new Release_lock();
+		}
 	}
-	public void process_input(String name,int input1,int input2,int input3){
+	
+	public void process_input(String name, int input1,int input2,int input3){
 		if (board.is_set(input1,input2,input3)){ 
 			if ((board.num_cards) > 12 || (deck.num_cards < 3)){
 				//System.out.println("removing 3 cards");
