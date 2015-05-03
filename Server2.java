@@ -1,4 +1,3 @@
-// echo server
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,32 +8,59 @@ import java.util.*;
 
 
 public class Server2 {
-
-	public static Lobby lobby = new Lobby(3);
-	public static Queue<String> q = new LinkedList<String>();
-	public static HashMap<String,PrintWriter> comms = new HashMap<String,PrintWriter>();
+	
+	public static int portNum = 4445;
+	public static int numGames = 3;
+	
+	// Lobby that adds and moves players around
+	public static Lobby lobby = null;
+	// opQueue is a queue of strings formatted: "username:operation"
+	public static Queue<String> opQueue = null;
+	// comms maintains output streams for each logged in player
+	public static HashMap<String,PrintWriter> comms = null;
+	// the list of players logged in
+	public static HashMap<String,Player> players = null;
+	
 	public static void main(String args[]){
-		Worker w = new Worker(q);
-		Socket s=null;
+		opQueue = new LinkedList<String>();
+		comms = new HashMap<String,PrintWriter>();
+		players = new HashMap<String,Player>();
+		lobby = new Lobby(3, players);
+		
+		Worker queueProc = new Worker(opQueue, comms, lobby);
+		Socket playerSocket = null;
 		ServerSocket ss2=null;
-		w.start();
+		queueProc.start();
 		try{
-			ss2 = new ServerSocket(4445); // can also use static final PORT_NUM , when defined
-		} catch(IOException e){
+			ss2 = new ServerSocket(portNum);
+		}
+		catch(IOException e){
 			e.printStackTrace();
-			System.out.println("Server error");
+			System.err.println("Server had error opening a ServerSocket.");
 		}
 
 		while(true){
-			System.out.println("While(true)");
+			System.out.println("Inside accepting connections phase...");
 			try{
-				s= ss2.accept();
-				System.out.println("connection Established");
-				ServerThread st=new ServerThread(s,lobby, q);
-				st.start();
+				playerSocket = ss2.accept();
+				System.out.println("Connection with a new player established.");
+				
+				try{
+					BufferedReader is = new BufferedReader(new InputStreamReader(playerSocket.getInputStream()));
+					PrintWriter os = new PrintWriter(playerSocket.getOutputStream());
+					
+					// Create new player thread that can handle its own input and output
+					// player thread cannot handle major requests, instead them into the opQueue
+					PlayerThread playerT = new PlayerThread(is, os, lobby, opQueue, comms);
+					playerT.start();
+		    	}
+		    	catch(IOException e){
+		    		System.err.println("IO error with trying to create new output/input stream for new player.");
+		    	}
+				
 			} catch(Exception e){
 				e.printStackTrace();
-				System.out.println("Connection Error");
+				System.err.println("Connection Error (with accepting players).");
 			}
 		}
 
@@ -42,175 +68,141 @@ public class Server2 {
 
 }
 
-class ServerThread extends Thread {
+class PlayerThread extends Thread {
 	private static Lobby lobby = null;
 	private static Player p = null;
     private static String line = "";
-    private static BufferedReader  is = null;
-    private static PrintWriter os = null;
-    private static Socket s = null;
-    private static Queue<String> q = null;
+    private static BufferedReader inputStream = null;
+    private static PrintWriter outputStream = null;
+    private static Queue<String>opQueue = null;
     private static String delims = ":";
     private static int check = 0;
-    public ServerThread(Socket s,Lobby mainlobby, Queue<String> tmp){
-        this.s=s;
-        this.q=tmp;
+    private static HashMap<String,PrintWriter> commsLink = null;
+    
+    public PlayerThread(BufferedReader is, PrintWriter os, Lobby mainlobby, Queue<String> theQueue, HashMap<String,PrintWriter> outstreams){
+        inputStream = is;
+        outputStream = os;
+        opQueue = theQueue;
         lobby = mainlobby;
+        commsLink = outstreams;
     }
 
-    public void run() {
-    	try{
-    		is= new BufferedReader(new InputStreamReader(s.getInputStream()));
-    		os=new PrintWriter(s.getOutputStream());
-
-    	}catch(IOException e){
-    		System.out.println("IO error in server thread");
-    	}
-    	
-    	/* This block provides the signIn and signUP functionality */    	
-    	while (!line.equals("X:bye")) {
+	public void run() {
+    	/* This block provides the signIn and signUP functionality */
+		
+		while (!line.equals("X:bye")) {
 			try {
-				if (is != null) {
-					line = is.readLine();
+				if (inputStream != null) {
+					line = inputStream.readLine();
 					String parts[] = line.split(delims);
-					//If L:user:pass , its for login
+					
+					System.out.println("Client said: " + line);
+					
+					//If L:user:pass, player is requesting to login
 					if("L".equals(parts[0])) {
 						check = DBUtils.signIn(parts[1], parts[2]);
 						//let client know how SignIn went
-						System.out.println(check);
-						os.println("L:"+check);
-						os.flush();	
+						System.out.println("Login attempt for: " + parts[1] + " resulted in: " + check);
+						outputStream.println("L:" + check);
+						outputStream.flush();	
 						p = new Player(parts[1]);
-						lobby.addPlayer(p);
-						os.println(lobby.showPlayers());
-						os.flush();
+						
+						if ("0".equals(check)) {
+							System.out.println("Adding player '" + parts[1] + "' to Lobby.");
+							lobby.addPlayer(p);
+							commsLink.put(p.name, outputStream);
+							outputStream.println(lobby.showPlayers());
+							outputStream.flush();
+						}
 					}
+					
 					//If R:user:pass:email, used for registration
 					if("R".equals(parts[0])) {
 						check = DBUtils.signUp(parts[1], parts[2], parts[3]);
-						System.out.println(check);
-						os.println("R:"+check);
-						os.flush();
+						System.out.println("Registration attempt for: " + parts[1] + " resulted in: " + check);
+						outputStream.println("R:" + check);
+						outputStream.flush();
 					}
+					
 					else {
-						q.add(p.name+":"+line);
+						String newOp = p.name + ":" + line;
+						opQueue.add(newOp);		
 					}
 				}
+				
+				// If outputStream is null
 				else {
+					System.err.println("outputStream for player '" + p.name + "' is null. ");
 					line = "X:bye";
 				}
-				System.out.println("Client said: " + line);
-				q.add(line);				
+				
 			}
 			catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
-    	
-    	/*
-   		try {
-       		line=is.readLine(); //read the string from client
-       		String parts[] = line.split(delims);
-       		//If L:user:pass , its for login
-       		if("L".equals(parts[0])) {
-       			check = DBUtils.signIn(parts[1], parts[2]);
-       			//let client know how SignIn went
-       			System.out.println(check);
-       			os.println("L:"+check);
-       			os.flush();	
-       			p = new Player(parts[1]);
-       			lobby.addPlayer(p);
-       		}
-       		//If R:user:pass:email, used for registration
-       		if("R".equals(parts[0])) {
-       			check = DBUtils.signUp(parts[1], parts[2], parts[3]);
-       			System.out.println(check);
-       			os.println("R:"+check);
-       			os.flush();
-       		}
-   		}catch (IOException e) {
-   			line=this.getName(); //reused String line for getting thread name
-   			System.out.println("IO Error/ Client "+line+" terminated abruptly");
-   		} catch(NullPointerException e){
-   			line=this.getName(); //reused String line for getting thread name
-   			System.out.println("Client "+line+" Closed");
-   		}
-   		*/
-    	
-    	
-   		/*
-   		finally {    
-   			try{
-   				System.out.println("Connection Closing..");
-   				if (is!=null){
-   					is.close(); 
-   					System.out.println(" Socket Input Stream Closed");
-   				}
-   				if(os!=null){
-   					os.close();
-   					System.out.println("Socket Out Closed");
-   				}
-   				if (s!=null){
-   					s.close();
-   					System.out.println("Socket Closed");
-   				}
-   			} catch(IOException ie){
-   				System.out.println("Socket Close Error");
-   			}
-   		}//end finally
-   		*/
    	}
     
 }
 
 
 class Worker extends Thread {
-	Queue<String> q = null;
-    private static String delims = ":";
+	private Queue<String>opQueue = null;
+	private static HashMap<String, PrintWriter> playerOutputStreams = null;
+    private static Lobby lobby = null;
+    
+	private static String delims = ":";
     private static int check = 0;
     private static String line = "";
     private static PrintWriter os = null;
-    HashMap<String,PrintWriter> outs = null;
-public Worker(Queue<String> tmp,HashMap<String,PrintWriter> outstreams) {
-	q = tmp;
-	outs = outstreams;
-	
-}
-public void run() {
-	while(true) {
-		try {
-			String op = q.remove();
-			
-			
-		}catch(NoSuchElementException e) {
-			
-		}
+    
+	public Worker(Queue<String> theQueue, HashMap<String,PrintWriter> outstreams, Lobby mainlobby) {
+		opQueue = theQueue;
+		playerOutputStreams = outstreams;
+		lobby = mainlobby;
 	}
 	
-}
-
-private static void parseString(String clientLine) {
+	public void run() {
+		while(true) {
+			try {
+				String op = opQueue.remove();
+				System.out.println("Queue Processor handling new operation '" + op + "'.");
+				parseString(op);
+			}
+			catch(NoSuchElementException e) {
+				// No new operation waiting.
+			}
+		}
+		
+	}
+	
+	private static void parseString(String clientLine) {
 		String parts[] = clientLine.split(delims);
 		String uname = parts[0];
+		os = playerOutputStreams.get(uname);
+		// Get output stream to the specificied player from the username(uname)
+		
+		
+		// If player is choosing a game room:
 		if("GC".equals(parts[1])) {
-			lobby.games[Integer.parseInt(parts[2])].addPlayer(, p);
+			lobby.games[Integer.parseInt(parts[2])].addPlayer(uname);
 		}
+		
+		// If player is exiting the entire game
 		if("X".equals(parts[1])) {
 			try {
-				s.close();
-				is = null;
-				lobby.removePlayer(p);
-				os.println(lobby.showPlayers());
+				lobby.removePlayer(uname);
+				playerOutputStreams.remove(uname);
 				os = null;
-				System.out.println("Closing connect to thread for player: " + p.name + "\n");
+				
+				// Show all other players new list of players
+				// [allOS].println(lobby.showPlayers());
+				System.out.println("Closing connect to thread for player: '" + uname + "'.");
 			}
+			
 			catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
-
-
 }
