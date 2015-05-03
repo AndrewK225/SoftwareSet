@@ -5,15 +5,19 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.*;
+
 
 public class Server2 {
 
 	public static Lobby lobby = new Lobby(3);
-	
+	public static Queue<String> q = new LinkedList<String>();
+	public static HashMap<String,PrintWriter> comms = new HashMap<String,PrintWriter>();
 	public static void main(String args[]){
-		
+		Worker w = new Worker(q);
 		Socket s=null;
 		ServerSocket ss2=null;
+		w.start();
 		try{
 			ss2 = new ServerSocket(4445); // can also use static final PORT_NUM , when defined
 		} catch(IOException e){
@@ -26,7 +30,7 @@ public class Server2 {
 			try{
 				s= ss2.accept();
 				System.out.println("connection Established");
-				ServerThread st=new ServerThread(s,lobby);
+				ServerThread st=new ServerThread(s,lobby, q);
 				st.start();
 			} catch(Exception e){
 				e.printStackTrace();
@@ -38,17 +42,19 @@ public class Server2 {
 
 }
 
-class ServerThread extends Thread{  
+class ServerThread extends Thread {
 	private static Lobby lobby = null;
 	private static Player p = null;
     private static String line = "";
     private static BufferedReader  is = null;
     private static PrintWriter os = null;
     private static Socket s = null;
+    private static Queue<String> q = null;
     private static String delims = ":";
     private static int check = 0;
-    public ServerThread(Socket s,Lobby mainlobby){
+    public ServerThread(Socket s,Lobby mainlobby, Queue<String> tmp){
         this.s=s;
+        this.q=tmp;
         lobby = mainlobby;
     }
 
@@ -66,16 +72,35 @@ class ServerThread extends Thread{
 			try {
 				if (is != null) {
 					line = is.readLine();
-					String toks[] = line.split(delims);
-					if("GC".equals(toks[0])) {
-						int choice = Integer.parseInt(toks[1]);
+					String parts[] = line.split(delims);
+					//If L:user:pass , its for login
+					if("L".equals(parts[0])) {
+						check = DBUtils.signIn(parts[1], parts[2]);
+						//let client know how SignIn went
+						System.out.println(check);
+						os.println("L:"+check);
+						os.flush();	
+						p = new Player(parts[1]);
+						lobby.addPlayer(p);
+						os.println(lobby.showPlayers());
+						os.flush();
+					}
+					//If R:user:pass:email, used for registration
+					if("R".equals(parts[0])) {
+						check = DBUtils.signUp(parts[1], parts[2], parts[3]);
+						System.out.println(check);
+						os.println("R:"+check);
+						os.flush();
+					}
+					else {
+						q.add(p.name+":"+line);
 					}
 				}
 				else {
 					line = "X:bye";
 				}
 				System.out.println("Client said: " + line);
-				parseString(line);					
+				q.add(line);				
 			}
 			catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -137,29 +162,42 @@ class ServerThread extends Thread{
    		*/
    	}
     
-    private static void parseString(String clientLine) {
-    	String parts[] = clientLine.split(delims);
-   		//If L:user:pass , its for login
-   		if("L".equals(parts[0])) {
-   			check = DBUtils.signIn(parts[1], parts[2]);
-   			//let client know how SignIn went
-   			System.out.println(check);
-   			os.println("L:"+check);
-   			os.flush();	
-   			p = new Player(parts[1]);
-   			lobby.addPlayer(p);
-   			os.println(lobby.showPlayers());
-   			os.flush();
-   		}
-   		//If R:user:pass:email, used for registration
-   		if("R".equals(parts[0])) {
-   			check = DBUtils.signUp(parts[1], parts[2], parts[3]);
-   			System.out.println(check);
-   			os.println("R:"+check);
-   			os.flush();
-   		}
-   		if("X".equals(parts[0])) {
-   			try {
+}
+
+
+class Worker extends Thread {
+	Queue<String> q = null;
+    private static String delims = ":";
+    private static int check = 0;
+    private static String line = "";
+    private static PrintWriter os = null;
+    HashMap<String,PrintWriter> outs = null;
+public Worker(Queue<String> tmp,HashMap<String,PrintWriter> outstreams) {
+	q = tmp;
+	outs = outstreams;
+	
+}
+public void run() {
+	while(true) {
+		try {
+			String op = q.remove();
+			
+			
+		}catch(NoSuchElementException e) {
+			
+		}
+	}
+	
+}
+
+private static void parseString(String clientLine) {
+		String parts[] = clientLine.split(delims);
+		String uname = parts[0];
+		if("GC".equals(parts[1])) {
+			lobby.games[Integer.parseInt(parts[2])].addPlayer(, p);
+		}
+		if("X".equals(parts[1])) {
+			try {
 				s.close();
 				is = null;
 				lobby.removePlayer(p);
@@ -167,10 +205,12 @@ class ServerThread extends Thread{
 				os = null;
 				System.out.println("Closing connect to thread for player: " + p.name + "\n");
 			}
-   			catch (IOException e) {
+			catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-   		}
-    }
+		}
+	}
+
+
 }
