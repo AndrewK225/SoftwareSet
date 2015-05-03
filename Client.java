@@ -14,35 +14,53 @@ public class Client {
 	static final int LOGIN = 0;
 	static final int LOBBY = 1;
 	static final int GAME = 2;
+	private static int numCards = 0;
+	
+	private static String commDelim = ":";
 	
 	static int screenWidth;
 	static int screenHeight;
 	static int loginWidth;
 	static int loginHeight;
 	
-	private static String address = "199.98.20.120";
-	//private static String address = "localhost";
+	//private static String address = "199.98.20.120"; // Sable's VM
+	private static String address = "localhost";
 	private static int port = 4445;
 	
 	private static JFrame mainframe;
 	private static String username;
 	private static String password;
-	private static int currstate;
+	private static int currState;
 	private static Dimension screenSize;
 	
 	private static JPanel states;
 	private static JPanel loginpanel;
 	private static JPanel lobbypanel;
-	private static JPanel gamepanel;
+	private static JPanel gamepanel3;
+	private static JPanel gamepanel6;
+	private static JPanel gamepanel9;
+	private static JPanel gamepanel12;
+	private static JPanel gamepanel15;
+	private static JPanel gamepanel18;
+	private static JPanel gamepanel21;
 	
 	private static String line = "";
 	private static BufferedReader br = null;
 	private static BufferedReader socketReader = null;
 	private static PrintWriter socketWriter = null;
 	
+	private static JTextArea chatList = null;
+	private static JTextArea activePlayersList = null; 
+	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
-	private static String GAMESTATE = "Game Room State";
+	private static String GAMESTATE3 = "Game Room State with 3 Cards";
+	private static String GAMESTATE6 = "Game Room State with 6 Cards";
+	private static String GAMESTATE9 = "Game Room State with 9 Cards";
+	private static String GAMESTATE12 = "Game Room State with 12 Cards";
+	private static String GAMESTATE15 = "Game Room State with 15 Cards";
+	private static String GAMESTATE18 = "Game Room State with 18 Cards";
+	private static String GAMESTATE21 = "Game Room State with 21 Cards";
 	
 	private static Socket clientSocket;
 	
@@ -88,7 +106,7 @@ public class Client {
 			}
 		}
 		
-		if (clientSocket != null) { 
+		if (clientSocket != null) {
 			switchState(LOGIN);
 			mainframe.setSize(loginWidth, loginHeight);
 			mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
@@ -99,6 +117,7 @@ public class Client {
 		        public void windowClosing(WindowEvent e) {
 		        	System.out.println("Exiting...\n");
 		        	// Check if logout required
+		        	sendMessage("X:Exiting");
 		        	System.exit(0);
 		        }
 			});
@@ -108,7 +127,7 @@ public class Client {
 				try {
 					line = socketReader.readLine();
 					System.out.println("Server said: " + line);
-					
+					parseString(line);					
 				}
 				catch (IOException e1) {
 					// TODO Auto-generated catch block
@@ -117,7 +136,6 @@ public class Client {
 			}
 		}
 	}
-	
 	
 	private static void createLogin() {
 
@@ -148,8 +166,10 @@ public class Client {
 		loginpanel.add(new JLabel("Username:"));
 		unameText.setEditable(true);
 		loginpanel.add(unameText);
+		unameText.setDocument(new JTextFieldLimit(15));
 		loginpanel.add(new JLabel("Password:"));
 		passwdText.setEditable(true);
+		passwdText.setDocument(new JTextFieldLimit(15));
 		loginpanel.add(passwdText);
 		
 		
@@ -169,27 +189,15 @@ public class Client {
 					loginStr = "L:" + username + ":" + password;
 				}
 				else {
-					loginStr = "L:bob:123";	
+					loginStr = "L:TaylorSwift:tswift";	
 				}
 				
+				/*
 				socketWriter.println(loginStr);
 				socketWriter.flush();
-				
-				/* Remnants of return value checking when Client accessed DB directly
-				switch(ret) {
-				
-					case 0: 
-						System.out.println("Sign in successful\n");
-						switchState(LOBBY);
-						break;
-					case 1:
-						System.out.println("Username not found\n");
-						break;
-					case 2:
-						System.out.println("Wrong password\n");
-				
-				}
 				*/
+				System.out.println("Attempting to login with: " + loginStr);
+				sendMessage(loginStr);
 				
 				/*
 				// display/center the jdialog when the button is pressed
@@ -265,9 +273,13 @@ public class Client {
 							
 							regisStr = "R:" + username + ":" + password + ":" + email;
 							
+							/*
 							socketWriter.println(regisStr);
 							socketWriter.flush();
-			                
+			                */
+							
+							sendMessage(regisStr);
+							
 			                //switchState(LOBBY);
 						}
 						else {
@@ -313,7 +325,83 @@ public class Client {
 		lobbypanel = new JPanel();
 		lobbypanel.setSize(new Dimension(screenWidth, screenHeight));
 		lobbypanel.setPreferredSize(new Dimension(screenWidth, screenHeight));
-		states.add(lobbypanel, LOBBYSTATE);
+		
+		JScrollPane activePlayersBox;
+	    screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		screenHeight = screenSize.height;
+		screenWidth = screenSize.width;
+	    
+		int chatBoxWidth = screenWidth;
+		int chatBoxHeight = 200;
+		int activePlayersBoxHeight = screenHeight - chatBoxHeight - 30;
+		
+	    lobbypanel.setPreferredSize(screenSize);
+	    lobbypanel.setLayout(null);
+	    
+	    
+	    JButton game1 = new JButton("Game1");
+	    game1.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    	}
+	    });
+	    int gameBtnWidth = screenWidth/6;
+	    int gameBtnHeight = 200;
+	    int activePlayersBoxWidth = gameBtnWidth;
+	    
+	    screenWidth = screenWidth - activePlayersBoxWidth;
+	    
+	    game1.setBounds((screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
+	    lobbypanel.add(game1);
+	    
+	    
+	    JButton game2 = new JButton("Game2");
+	    game2.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent arg0) {
+	    	}
+	    });
+	    game2.setBounds((3*screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
+	    lobbypanel.add(game2);
+	    
+	    
+	    JButton game3 = new JButton("Game3");
+	    game3.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    	}
+	    });
+	    game3.setBounds((5*screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
+	    lobbypanel.add(game3);
+	    
+	    activePlayersList = new JTextArea("Something really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\n");
+	    activePlayersList.setLineWrap(true);
+	    activePlayersList.setWrapStyleWord(true);
+	    activePlayersList.setEditable(false);
+	    //activePlayersList.setSize(activePlayersBoxWidth-30, activePlayersBoxHeight-30);
+	    activePlayersList.setFont(new Font("Serif", Font.BOLD, 22));
+	    
+	    activePlayersBox = new JScrollPane(activePlayersList);
+	    activePlayersBox.setSize(activePlayersBoxWidth, screenHeight - chatBoxHeight);
+	    activePlayersBox.setBackground(Color.WHITE);
+	    activePlayersBox.setBounds(screenSize.width - (activePlayersBoxWidth + 30), 30, activePlayersBoxWidth, activePlayersBoxHeight);
+	    lobbypanel.add(activePlayersBox);
+	    
+	    
+	    
+	    chatList = new JTextArea("Something really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\n");
+	    chatList.setLineWrap(true);
+	    chatList.setWrapStyleWord(true);
+	    chatList.setEditable(false);
+	    //activePlayersList.setSize(activePlayersBoxWidth-30, activePlayersBoxHeight-30);
+	    chatList.setFont(new Font("Serif", Font.PLAIN, 16));
+	    
+	    
+	    JScrollPane chatBox = new JScrollPane(chatList);
+	    chatBox.setSize(screenWidth, screenHeight - chatBoxHeight);
+	    chatBox.setBackground(Color.WHITE);
+	    chatBox.setBounds(gameBtnWidth/2, screenHeight - gameBtnHeight + 30, screenSize.width - gameBtnWidth, gameBtnHeight/2 + 30);
+	    lobbypanel.add(chatBox);
+	    
+	    
+	    states.add(lobbypanel, LOBBYSTATE);
 	}
 	
 	private static void switchState(int endState) {
@@ -321,7 +409,7 @@ public class Client {
 		
 		switch (endState) {
 			case LOGIN:
-				currstate = LOGIN;
+				currState = LOGIN;
 				frames.show(states, LOGINSTATE);
 				mainframe.setPreferredSize(new Dimension(loginWidth, loginHeight));
 				mainframe.setLocation(new Point((screenWidth/2) - (loginWidth/2), (screenHeight/2) - (loginHeight/2)));
@@ -330,7 +418,7 @@ public class Client {
 				break;
 			
 			case LOBBY: 
-				currstate = LOBBY;
+				currState = LOBBY;
 				frames.show(states, LOBBYSTATE);
 				mainframe.setPreferredSize(screenSize);
 				mainframe.setLocation(new Point(0,0));
@@ -339,13 +427,87 @@ public class Client {
 				break;
 				
 			case GAME:
-				currstate = GAME;
-				frames.show(states, GAMESTATE);
+				currState = GAME;
+				
+				switch (numCards) {
+					case 3:
+						frames.show(states, GAMESTATE3);
+						break;
+					case 6:
+						frames.show(states, GAMESTATE6);
+						break;
+					case 9:
+						frames.show(states, GAMESTATE9);
+						break;
+					case 12:
+						frames.show(states, GAMESTATE12);
+						break;
+					case 15:
+						frames.show(states, GAMESTATE15);
+						break;
+					case 18:
+						frames.show(states, GAMESTATE18);
+						break;
+					case 21:
+						frames.show(states, GAMESTATE21);
+						break;
+				}
 				mainframe.setPreferredSize(screenSize);
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
-				System.out.println("CHANGED TO GAME\n");
+				System.out.println("CHANGED TO GAME STATE WITH " + Integer.toString(numCards) + " CARDS\n");
 				break;
 		}
+	}
+	
+	private static void parseString(String serverLine) {
+		String parts[] = line.split(commDelim);
+		
+		if ("L".equals(parts[0])) {
+			// Login return info from server
+			if (currState == LOGIN) {
+				if ("0".equals(parts[1])) {
+					System.out.println("Sign in successful\n");
+					if (currState == LOGIN) {
+						switchState(LOBBY);
+					}
+				}
+				
+				else if ("1".equals(parts[1])) {
+					JDialog d = new JDialog(mainframe, "Login Failure", true);
+					d.setSize(450,80);
+					JPanel p = new JPanel();
+					String message = "<html>Login attempt for Username: '" + username + "' failed - username not found!<br>Please try again.</html>";
+					p.add(new JLabel(message));
+					p.setSize(450,80);
+					d.add(p);
+					d.setLocationRelativeTo(mainframe);
+					d.setVisible(true);
+				}
+				
+				else if ("2".equals(parts[1])) {
+					JDialog d = new JDialog(mainframe, "Login Failure", true);
+					d.setSize(450,80);
+					JPanel p = new JPanel();
+					String message = "<html>Login attempt for Username: '" + username + "' failed - wrong password!<br>Please try again.</html>";
+					p.add(new JLabel(message));
+					p.setSize(450,80);
+					d.add(p);
+					d.setLocationRelativeTo(mainframe);
+					d.setVisible(true);
+				}
+			}
+		}
+		
+		if ("LBYACTIVE".equals(parts[0])) {
+			activePlayersList.setText(parts[1]);
+		}
+	}
+	
+	private static void sendMessage (String message) {
+		if (socketWriter != null) {
+    		socketWriter.println(message);
+			socketWriter.flush();
+    	}
 	}
 }
