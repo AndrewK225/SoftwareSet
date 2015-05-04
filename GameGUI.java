@@ -23,16 +23,28 @@ public class GameGUI {
 	static int chatBoxHeight;
 	static int playersBoxHeight;
 	static boolean lock_set = false;
+	static String setChain = "S:";
+	static int counter = 0;
 	public static void main(String[] args) {
 		setup();
 		
-		String board = "70:18:0020:0101:0201:0000:2201:0000:0000:0000:0000:0000:0000:0000:0020:0101:0201:0000:2201:0000";
+		String board = "70:18:0020:0101:0201:0000:2201:0000:1000:0000:0000:0000:0000:0000:0020:0101:0201:0000:2201:0000";
 		displayBoard(board);
 		epilogue();
 	}
 	public static void declare_set(){
 		
 	}
+	
+	public static void check_set() {
+		//reset the global counter
+		counter = 0;
+		//pass the setChain to the game logic
+		
+		setChain = "S:";
+		
+	}
+	
 	public static void displayBoard(String s){
 		//displays the cards on the board, given the board in the format deck_size:board_size:card1:card2:... and it will display.
 		String temp = s;
@@ -50,9 +62,44 @@ public class GameGUI {
 		Icon[] customIcons = new ImageIcon[board_size];
 		for (int i = 0; i < board_size; i++){
 			checkBoxes[i] = new JCheckBox();
+			checkBoxes[i].setText(Integer.toString(i));
+			checkBoxes[i].setEnabled(true);
 			customIcons[i] = new ImageIcon(".//src//setpics//" + cards[i] + ".gif");
 			checkBoxes[i].setIcon(new CheckBoxIcon(checkBoxes[i], customIcons[i], SwingConstants.CENTER, SwingConstants.TOP));	
-			//checkBoxes[i].addChangeListener(changeListener);
+			checkBoxes[i].addActionListener(new ActionListener(){
+				public void actionPerformed (ActionEvent e){
+					/*
+					 if(lock_set == true) {
+					 
+						if(checkBoxes[i].isSelected()) {
+							
+						}
+					}
+					*/
+					AbstractButton abstractButton = (AbstractButton) e.getSource();
+			        boolean selected = abstractButton.isSelected();
+					System.out.println("Is selected = " + selected);
+					System.out.println(e.getActionCommand() + " was pressed");
+					setChain = setChain + e.getActionCommand() + ":";
+					System.out.println(e.getSource());
+					//kind of a kluge to detect if the box was being checked or unchecked
+					if("S:"!=setChain) {  //if something has already been selected it would be in the string
+						System.out.println("in the if");
+						String[] parts = setChain.split(":"); //so know which cards have been selected
+						if(e.getActionCommand().equals(parts[1])|| e.getActionCommand().equals(parts[parts.length-1])) { //if the card if pressed again then user wanted it unchecked
+							System.out.println(setChain);
+							setChain = setChain.replace(e.getActionCommand() + ":", "");
+							System.out.println(e.getActionCommand()+" was unchecked");
+						}
+					}
+					System.out.println(e.getSource());
+					counter++;
+					if(counter == 3){
+						check_set();						
+					}
+					System.out.println(setChain);
+				}
+			});
 			gamepanel.add(checkBoxes[i]);
 		} 
 	}
