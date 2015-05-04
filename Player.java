@@ -1,7 +1,7 @@
 
 public class Player {
 	private int score;
-	private int location;
+	public int location;
 	public String name;
 	
 	public Player (String name){
