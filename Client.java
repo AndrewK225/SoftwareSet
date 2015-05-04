@@ -9,14 +9,21 @@ import java.net.Socket;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
+import java.util.*;
+import java.util.Timer;
+
 public class Client {
 	
 	static final int LOGIN = 0;
 	static final int LOBBY = 1;
 	static final int GAME = 2;
+	
+	private static boolean canexit = false;
 	private static int numCards = 0;
 	
 	private static String commDelim = ":";
+	
+	private static Timer timer = new Timer();
 	
 	static int screenWidth;
 	static int screenHeight;
@@ -31,7 +38,8 @@ public class Client {
 	private static String username;
 	private static String password;
 	private static int currState;
-	private static Dimension screenSize;
+	private static JScrollBar chatVertBar;
+	private static JScrollBar playersVertBar;
 	
 	private static JPanel states;
 	private static JPanel loginpanel;
@@ -66,15 +74,14 @@ public class Client {
 	private static Socket clientSocket;
 	
 	public static void main(String[] args) {
-		screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		screenHeight = screenSize.height;
-		screenWidth = screenSize.width;
+		screenHeight = 768;
+		screenWidth = 1024;
 		
 		mainframe = new JFrame("Set Client");
 		states = new JPanel(new CardLayout());
 		mainframe.add(states);
 		//mainframe.setContentPane(states);
-		mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mainframe.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		
 		// mainframe.add(mainpanel); // or set as content pane?
@@ -116,10 +123,17 @@ public class Client {
 			mainframe.addWindowListener(new WindowAdapter() {
 			 
 		        public void windowClosing(WindowEvent e) {
-		        	System.out.println("Exiting...\n");
 		        	// Check if logout required
-		        	sendMessage("X:Exiting");
-		        	System.exit(0);
+		        	try {
+		        		sendMessage("X:Exiting");
+		        		System.out.println("Exiting...\n");
+		        		Thread.sleep(500);
+		        		System.exit(0);
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+
 		        }
 			});
 			
@@ -296,29 +310,27 @@ public class Client {
 		lobbypanel.setSize(new Dimension(screenWidth, screenHeight));
 		lobbypanel.setPreferredSize(new Dimension(screenWidth, screenHeight));
 		
-	    screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		screenHeight = screenSize.height;
-		screenWidth = screenSize.width;
+	    screenHeight = 768;
+		screenWidth = 1024;
+	    int padding = 15;
+		int gameBtnWidth = (screenWidth - 5*padding)/4;
+	    int gameBtnHeight = gameBtnWidth;
 	    
-		int chatBoxWidth = screenWidth;
-		int chatBoxHeight = 200;
-		int activePlayersBoxHeight = screenHeight - chatBoxHeight - 30;
-		int gameBtnWidth = screenWidth/6;
-	    int gameBtnHeight = 200;
-	    int activePlayersBoxWidth = gameBtnWidth;
-	    screenWidth = screenWidth - activePlayersBoxWidth;
-		
-	    lobbypanel.setPreferredSize(screenSize);
+	    lobbypanel.setPreferredSize(new Dimension(screenWidth, screenHeight));
 	    lobbypanel.setLayout(null);
 	    
 	    
-	    JButton game1 = new JButton("Game1");
+	    JButton game1 = new JButton("G1");
+	    game1.setText("Game1");
 	    game1.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
 	    		// Tell server game 1 chosen...
+	    		System.out.println(e.getActionCommand() + " was pressed ");
 	    	}
 	    });
-	    game1.setBounds((screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
+	    game1.setEnabled(true);
+	    game1.setBounds(padding, padding, gameBtnWidth, gameBtnHeight);
+	    
 	    lobbypanel.add(game1);
 	    
 	    
@@ -328,7 +340,7 @@ public class Client {
 	    		// Tell server game 2 chosen...
 	    	}
 	    });
-	    game2.setBounds((3*screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
+	    game2.setBounds(gameBtnWidth + 2*padding, padding, gameBtnWidth, gameBtnHeight);
 	    lobbypanel.add(game2);
 	    
 	    
@@ -338,7 +350,7 @@ public class Client {
 	    		// Tell server game 3 chosen...
 	    	}
 	    });
-	    game3.setBounds((5*screenWidth/6) - (gameBtnWidth/2), 30, gameBtnWidth, gameBtnHeight);
+	    game3.setBounds(2*gameBtnWidth + 3*padding, padding, gameBtnWidth, gameBtnHeight);
 	    lobbypanel.add(game3);
 	    
 	    activePlayersList = new JTextArea("Something really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\n");
@@ -349,11 +361,12 @@ public class Client {
 	    activePlayersList.setFont(new Font("Serif", Font.BOLD, 22));
 	    
 	    activePlayersBox = new JScrollPane(activePlayersList);
-	    activePlayersBox.setSize(activePlayersBoxWidth, screenHeight - chatBoxHeight);
+	    activePlayersBox.setSize(gameBtnWidth, screenHeight - gameBtnWidth - 3*padding);
 	    activePlayersBox.setBackground(Color.WHITE);
-	    activePlayersBox.setBounds(screenSize.width - (activePlayersBoxWidth + 30), 30, activePlayersBoxWidth, activePlayersBoxHeight);
+	    activePlayersBox.setBounds(3*gameBtnWidth + 4*padding, padding, gameBtnWidth, screenHeight - gameBtnWidth - 3*padding);
+	    playersVertBar = activePlayersBox.getVerticalScrollBar();
+	    playersVertBar.setValue( playersVertBar.getMaximum() );
 	    lobbypanel.add(activePlayersBox);
-	    
 	    
 	    
 	    chatList = new JTextArea("Something really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\n");
@@ -365,9 +378,11 @@ public class Client {
 	    
 	    
 	    JScrollPane chatBox = new JScrollPane(chatList);
-	    chatBox.setSize(screenWidth, screenHeight - chatBoxHeight);
+	    chatBox.setSize(screenWidth, screenHeight - gameBtnWidth - 100);
 	    chatBox.setBackground(Color.WHITE);
-	    chatBox.setBounds(gameBtnWidth/2, screenHeight - gameBtnHeight + 30, screenSize.width - gameBtnWidth, gameBtnHeight/2 + 30);
+	    chatBox.setBounds(padding, screenHeight - gameBtnHeight - 2*padding, screenWidth - 2*padding, gameBtnHeight-50);
+	    chatVertBar = chatBox.getVerticalScrollBar();
+	    chatVertBar.setValue( chatVertBar.getMaximum() );
 	    lobbypanel.add(chatBox);
 	    
 	    
@@ -390,7 +405,7 @@ public class Client {
 			case LOBBY: 
 				currState = LOBBY;
 				frames.show(states, LOBBYSTATE);
-				mainframe.setPreferredSize(screenSize);
+				mainframe.setPreferredSize(new Dimension(1024, 768));
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
 				System.out.println("CHANGED TO LOBBY\n");
@@ -422,7 +437,7 @@ public class Client {
 						frames.show(states, GAMESTATE21);
 						break;
 				}
-				mainframe.setPreferredSize(screenSize);
+				mainframe.setPreferredSize(new Dimension(1024, 768));
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
 				System.out.println("CHANGED TO GAME STATE WITH " + Integer.toString(numCards) + " CARDS\n");
@@ -483,4 +498,11 @@ public class Client {
 			socketWriter.flush();
     	}
 	}
+
+	private static TimerTask exitApp = new TimerTask() {
+		public void run() {
+			System.out.println("exiting through timer");
+			System.exit(0);
+	    }
+	};
 }

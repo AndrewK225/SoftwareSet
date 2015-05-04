@@ -102,8 +102,31 @@ class PlayerThread extends Thread {
 					
 					System.out.println("Client said: " + line);
 					
+					if ("X".equals(parts[0])) {
+						System.out.println("Client attempting to exit");
+						
+						String newOp = "REMOVEPLAYER:" + p.name;
+						opQueue.add(newOp);
+						
+						System.out.println("Client attempting to exit");
+						System.out.println("About to call movePlayer");
+						lobby.movePlayer(p.name, -1);
+						System.out.println("After movePlayer");
+						commsLink.remove(p.name, outputStream);
+						//lobby.removePlayer(p);
+						lobby.removePlayer(p.name);
+						//p = null;
+						
+						String activeList = lobby.showPlayers();
+						newOp = "BROADCAST:" + activeList;
+						opQueue.add(newOp);
+						
+						running = false;
+					}
+					
+					
 					//If L:user:pass, player is requesting to login
-					if("LOGIN".equals(parts[0])) {
+					else if("LOGIN".equals(parts[0])) {
 						check = DBUtils.signIn(parts[1], parts[2]);
 						//let client know how SignIn went
 						System.out.println("PlayerThread: Login attempt for: " + parts[1] + " resulted in: " + check);
@@ -139,10 +162,6 @@ class PlayerThread extends Thread {
 						outputStream.flush();
 					}
 					
-					else if ("X".equals(parts[0])) {
-						running = false;
-					}
-					
 					else {
 						String newOp = p.name + ":" + line;
 						opQueue.add(newOp);		
@@ -171,7 +190,7 @@ class PlayerThread extends Thread {
 
 
 class Worker extends Thread {
-	private Queue<String> opQueue = null;
+	private static Queue<String> opQueue = null;
 	private static Hashtable<String, PrintWriter> playerOutputStreams = null;
     private static Lobby lobby = null;
     
@@ -216,6 +235,20 @@ class Worker extends Thread {
 			    oneOutput.println(broadcastMsg);
 			    oneOutput.flush();
 			}
+		}
+		
+		else if ("REMOVEPLAYER".equals(uname)) {
+			String removePlayerName = parts[1];
+			lobby.movePlayer(removePlayerName, -1);
+			System.out.println("After movePlayer");
+			playerOutputStreams.remove(removePlayerName);
+			//lobby.removePlayer(p);
+			lobby.removePlayer(removePlayerName);
+			//p = null;
+			
+			String activeList = lobby.showPlayers();
+			String newOp = "BROADCAST:" + activeList;
+			opQueue.add(newOp);
 		}
 		
 		else {

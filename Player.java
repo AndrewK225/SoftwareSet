@@ -15,6 +15,7 @@ public class Player {
 	}
 	
 	public void movePlayer(int destination) {
+		System.out.println("Wrong");
 		this.location = destination;
 	}
 	
