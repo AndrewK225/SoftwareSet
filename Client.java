@@ -44,16 +44,9 @@ public class Client {
 	private static JPanel states;
 	private static JPanel loginpanel;
 	private static JPanel lobbypanel;
-	private static JPanel gamepanel3;
-	private static JPanel gamepanel6;
-	private static JPanel gamepanel9;
-	private static JPanel gamepanel12;
-	private static JPanel gamepanel15;
-	private static JPanel gamepanel18;
-	private static JPanel gamepanel21;
+	private static JPanel gamepanel;
 	
 	private static String line = "";
-	private static BufferedReader br = null;
 	private static BufferedReader socketReader = null;
 	private static PrintWriter socketWriter = null;
 	
@@ -63,13 +56,7 @@ public class Client {
 	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
-	private static String GAMESTATE3 = "Game Room State with 3 Cards";
-	private static String GAMESTATE6 = "Game Room State with 6 Cards";
-	private static String GAMESTATE9 = "Game Room State with 9 Cards";
-	private static String GAMESTATE12 = "Game Room State with 12 Cards";
-	private static String GAMESTATE15 = "Game Room State with 15 Cards";
-	private static String GAMESTATE18 = "Game Room State with 18 Cards";
-	private static String GAMESTATE21 = "Game Room State with 21 Cards";
+	private static String GAMESTATE = "Game Room State";
 	
 	private static Socket clientSocket;
 	
@@ -101,7 +88,6 @@ public class Client {
 		while (clientSocket == null) {
 			try {
 			    clientSocket = new Socket(address, port); // You can use static final constant PORT_NUM
-			    br = new BufferedReader(new InputStreamReader(System.in));
 			    socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			    socketWriter = new PrintWriter(clientSocket.getOutputStream());
 			}
@@ -320,15 +306,15 @@ public class Client {
 	    lobbypanel.setLayout(null);
 	    
 	    
-	    JButton game1 = new JButton("G1");
-	    game1.setText("Game1");
+	    JButton game1 = new JButton("Game1");
 	    game1.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
 	    		// Tell server game 1 chosen...
 	    		System.out.println(e.getActionCommand() + " was pressed ");
+	    		sendMessage("GAMECHOICE:1");
 	    	}
 	    });
-	    game1.setEnabled(true);
+	    //game1.setEnabled(true);
 	    game1.setBounds(padding, padding, gameBtnWidth, gameBtnHeight);
 	    
 	    lobbypanel.add(game1);
@@ -337,7 +323,7 @@ public class Client {
 	    JButton game2 = new JButton("Game2");
 	    game2.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent arg0) {
-	    		// Tell server game 2 chosen...
+	    		sendMessage("GAMECHOICE:2");
 	    	}
 	    });
 	    game2.setBounds(gameBtnWidth + 2*padding, padding, gameBtnWidth, gameBtnHeight);
@@ -347,7 +333,7 @@ public class Client {
 	    JButton game3 = new JButton("Game3");
 	    game3.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
-	    		// Tell server game 3 chosen...
+	    		sendMessage("GAMECHOICE:3");
 	    	}
 	    });
 	    game3.setBounds(2*gameBtnWidth + 3*padding, padding, gameBtnWidth, gameBtnHeight);
@@ -358,7 +344,7 @@ public class Client {
 	    activePlayersList.setWrapStyleWord(true);
 	    activePlayersList.setEditable(false);
 	    //activePlayersList.setSize(activePlayersBoxWidth-30, activePlayersBoxHeight-30);
-	    activePlayersList.setFont(new Font("Serif", Font.BOLD, 22));
+	    activePlayersList.setFont(new Font("Serif", Font.BOLD, 20));
 	    
 	    activePlayersBox = new JScrollPane(activePlayersList);
 	    activePlayersBox.setSize(gameBtnWidth, screenHeight - gameBtnWidth - 3*padding);
@@ -369,7 +355,7 @@ public class Client {
 	    lobbypanel.add(activePlayersBox);
 	    
 	    
-	    chatList = new JTextArea("Something really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\nSomething really long I don't know how long... Does this scroll? If so that'd be great - please God scroll over to the next line =(\n");
+	    chatList = new JTextArea("Some chat in the chatbox\n");
 	    chatList.setLineWrap(true);
 	    chatList.setWrapStyleWord(true);
 	    chatList.setEditable(false);
@@ -385,9 +371,11 @@ public class Client {
 	    chatVertBar.setValue( chatVertBar.getMaximum() );
 	    lobbypanel.add(chatBox);
 	    
-	    
 	    states.add(lobbypanel, LOBBYSTATE);
 	}
+	
+	
+	
 	
 	private static void switchState(int endState) {
 		CardLayout frames = (CardLayout)(states.getLayout());
@@ -413,30 +401,7 @@ public class Client {
 				
 			case GAME:
 				currState = GAME;
-				
-				switch (numCards) {
-					case 3:
-						frames.show(states, GAMESTATE3);
-						break;
-					case 6:
-						frames.show(states, GAMESTATE6);
-						break;
-					case 9:
-						frames.show(states, GAMESTATE9);
-						break;
-					case 12:
-						frames.show(states, GAMESTATE12);
-						break;
-					case 15:
-						frames.show(states, GAMESTATE15);
-						break;
-					case 18:
-						frames.show(states, GAMESTATE18);
-						break;
-					case 21:
-						frames.show(states, GAMESTATE21);
-						break;
-				}
+				frames.show(states, GAMESTATE);
 				mainframe.setPreferredSize(new Dimension(1024, 768));
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
@@ -485,7 +450,9 @@ public class Client {
 		}
 		
 		if ("LBYACTIVE".equals(parts[0])) {
-			System.out.println("Got active players list of:\n" + parts[1]);
+			//System.out.println("Got active players list of:\n" + parts[1]);
+			parts[1] = parts[1].replaceAll("\\\\n", "\\\n");
+			//System.out.println("After replace, list is:\n" + parts[1]);
 			activePlayersList.setText(parts[1]);
 			activePlayersBox.setViewportView(activePlayersList);
 			//mainframe.pack();

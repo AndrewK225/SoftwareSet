@@ -81,17 +81,17 @@ public class Server2 {
 }
 
 class PlayerThread extends Thread {
-	private static Lobby lobby = null;
-	private static Player p = null;
-    private static String line = "";
-    private static BufferedReader inputStream = null;
-    private static PrintWriter outputStream = null;
-    private static Queue<String> opQueue = null;
-    private static String delims = ":";
-    private static int check = 0;
-    private static Hashtable<String,PrintWriter> commsLink = null;
-    private volatile boolean running = true;
-	public int gameRoom = 0;
+	public Lobby lobby = null;
+	public Player p = null;
+	public String line = "";
+	public BufferedReader inputStream = null;
+	public PrintWriter outputStream = null;
+	public Queue<String> opQueue = null;
+	public String delims = ":";
+	public int check = 0;
+	public Hashtable<String,PrintWriter> commsLink = null;
+	public volatile boolean running;
+	public String gameRoom;
     
     public PlayerThread(BufferedReader is, PrintWriter os, Lobby mainlobby, Queue<String> theQueue, Hashtable<String,PrintWriter> outstreams){
         inputStream = is;
@@ -100,6 +100,8 @@ class PlayerThread extends Thread {
         lobby = mainlobby;
         commsLink = outstreams;
         running = true;
+        gameRoom = "0";
+        System.out.println("Game room = " + gameRoom);
     }
 
 	public void run() {
@@ -167,14 +169,17 @@ class PlayerThread extends Thread {
 						System.out.println("Hi1.");
 						
 						// Player is choosing a room to enter
-						
-						System.out.println("PlayerThread moving player '" + p.name + "' to room " + gameRoom);
 						System.out.println("h1b");
+						System.out.println("Room chosen = " + parts[1]);
+						
+						String newPlayerList = "";
+						newPlayerList = lobby.movePlayer(p.name, 1);
 						System.out.println("h1c");
-						System.out.println("h1d");
-						//String newPlayerList = lobby.movePlayer(p.name, gameRoom);
+						
 						//String newOp = "BROADCAST:" + newPlayerList;
+						System.out.println("h1d");
 						//opQueue.add(newOp);
+						System.out.println("h1e");
 					}
 					
 					/*
@@ -193,6 +198,7 @@ class PlayerThread extends Thread {
 						String newOp = p.name + ":" + line;
 						opQueue.add(newOp);		
 					}
+					System.out.println("Exiting the here.");
 				}
 				
 				// If outputStream is null
@@ -226,7 +232,12 @@ class PlayerThread extends Thread {
 			}
 		}
    	}
-    
+ 
+	
+	public void remove() {
+		
+	}
+	
 }
 
 
