@@ -53,6 +53,7 @@ public class Client {
 	private static JTextArea chatList = null;
 	private static JTextArea activePlayersList = null; 
 	private static JScrollPane activePlayersBox = null;
+	private static JScrollPane chatBox = null;
 	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
@@ -250,9 +251,9 @@ public class Client {
 							
 							regisStr = "REGISTER:" + username + ":" + password + ":" + email;
 							sendMessage(regisStr);
-							
 			                //switchState(LOBBY);
 						}
+						
 						else {
 							System.out.println("Invalid registration info entered!\n");
 							status1.setText("Invalid registration info!");
@@ -363,7 +364,7 @@ public class Client {
 	    chatList.setFont(new Font("Serif", Font.PLAIN, 16));
 	    
 	    
-	    JScrollPane chatBox = new JScrollPane(chatList);
+	    chatBox = new JScrollPane(chatList);
 	    chatBox.setSize(screenWidth, screenHeight - gameBtnWidth - 100);
 	    chatBox.setBackground(Color.WHITE);
 	    chatBox.setBounds(padding, screenHeight - gameBtnHeight - 2*padding, screenWidth - 2*padding, gameBtnHeight-50);
@@ -413,7 +414,7 @@ public class Client {
 	private static void parseString(String serverLine) {
 		String parts[] = line.split(commDelim);
 		
-		if ("L".equals(parts[0])) {
+		if ("LOGIN".equals(parts[0])) {
 			// Login return info from server
 			if (currState == LOGIN) {
 				if ("0".equals(parts[1])) {
@@ -446,15 +447,76 @@ public class Client {
 					d.setLocationRelativeTo(mainframe);
 					d.setVisible(true);
 				}
+				
+				else {
+					JDialog d = new JDialog(mainframe, "Login Failure", true);
+					d.setSize(450,80);
+					JPanel p = new JPanel();
+					String message = "<html>Login attempt for Username: '" + username + "' failed - database malfunctioned!<br>Please blame Andrew Koe.</html>";
+					p.add(new JLabel(message));
+					p.setSize(450,80);
+					d.add(p);
+					d.setLocationRelativeTo(mainframe);
+					d.setVisible(true);
+				}
 			}
 		}
 		
-		if ("LBYACTIVE".equals(parts[0])) {
+		else if ("REGISTER".equals(parts[0])) {
+			if (currState == LOGIN) {
+				if ("0".equals(parts[1])) {
+					System.out.println("Sign in successful\n");
+					if (currState == LOGIN) {
+						switchState(LOBBY);
+					}
+				}
+				
+				else if ("1".equals(parts[1])) {
+					JDialog d = new JDialog(mainframe, "Registration Failure", true);
+					d.setSize(450,80);
+					JPanel p = new JPanel();
+					String message = "<html>Registration attempt for Username: '" + username + "' failed - username already registered!<br>Please try again.</html>";
+					p.add(new JLabel(message));
+					p.setSize(450,80);
+					d.add(p);
+					d.setLocationRelativeTo(mainframe);
+					d.setVisible(true);
+				}
+				
+				else {
+					JDialog d = new JDialog(mainframe, "Registration Failure", true);
+					d.setSize(450,80);
+					JPanel p = new JPanel();
+					String message = "<html>Registration attempt for Username: '" + username + "' failed - database malfunctioned!<br>Please blame Andrew Koe.</html>";
+					p.add(new JLabel(message));
+					p.setSize(450,80);
+					d.add(p);
+					d.setLocationRelativeTo(mainframe);
+					d.setVisible(true);
+				}
+			}
+		}
+		
+		else if ("LBYACTIVE".equals(parts[0])) {
 			//System.out.println("Got active players list of:\n" + parts[1]);
-			parts[1] = parts[1].replaceAll("\\\\n", "\\\n");
-			//System.out.println("After replace, list is:\n" + parts[1]);
-			activePlayersList.setText(parts[1]);
-			activePlayersBox.setViewportView(activePlayersList);
+			
+			if (currState == LOBBY) {
+				parts[1] = parts[1].replaceAll("\\\\n", "\\\n");
+				//System.out.println("After replace, list is:\n" + parts[1]);
+				activePlayersList.setText(parts[1]);
+				activePlayersBox.setViewportView(activePlayersList);
+				playersVertBar = activePlayersBox.getVerticalScrollBar();
+			    playersVertBar.setValue( playersVertBar.getMaximum() );
+				//mainframe.pack();
+			}
+		}
+		
+		// Incoming chat is like "CHAT: username - sometext"
+		else if ("CHAT".equals(parts[0])) {
+			chatList.setText(parts[1]);
+			chatBox.setViewportView(chatList);
+			chatVertBar = chatBox.getVerticalScrollBar();
+		    chatVertBar.setValue( chatVertBar.getMaximum() );
 			//mainframe.pack();
 		}
 	}
@@ -466,10 +528,4 @@ public class Client {
     	}
 	}
 
-	private static TimerTask exitApp = new TimerTask() {
-		public void run() {
-			System.out.println("exiting through timer");
-			System.exit(0);
-	    }
-	};
 }

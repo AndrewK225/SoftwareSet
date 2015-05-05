@@ -111,43 +111,36 @@ class PlayerThread extends Thread {
 			try {
 				if (inputStream != null && outputStream != null) {
 					line = inputStream.readLine();
-					CharSequence gameChoiceStr = "GAMECHOICE";
 					String parts[] = line.split(delims);
 					
 					System.out.println("PlayerThread: Client said: " + parts[0] + "," + parts[1]);
-					System.out.println("typeofparts1 = " + parts[1].getClass().getName());
 					
 					if ("X".equals(parts[0])) {
 						System.out.println("Client attempting to exit");
-						
-						String newOp = "REMOVEPLAYER:" + p.name;
-						opQueue.add(newOp);
-						
-						System.out.println("Client attempting to exit");
-						System.out.println("About to call movePlayer");
-						lobby.movePlayer(p.name, -1);
-						System.out.println("After movePlayer");
-						commsLink.remove(p.name, outputStream);
-						
-						String newPlayerList = lobby.removePlayer(p);
-						newOp = "BROADCAST:" + newPlayerList;
-						opQueue.add(newOp);
+						if (p != null) {
+							lobby.movePlayer(p.name, -1);
+							commsLink.remove(p.name, outputStream);
+							
+							String newPlayerList = lobby.removePlayer(p);
+							String newOp = "BROADCAST:" + newPlayerList;
+							opQueue.add(newOp);
+						}
 						
 						running = false;
 					}
 					
 					//If L:user:pass, player is requesting to login
-					if("LOGIN".equals(parts[0])) {
+					else if("LOGIN".equals(parts[0])) {
 						check = DBUtils.signIn(parts[1], parts[2]);
 						//let client know how SignIn went
 						System.out.println("PlayerThread: Login attempt for: " + parts[1] + " resulted in: " + check);
-						outputStream.println("L:" + check);
+						outputStream.println("LOGIN:" + check);
 						outputStream.flush();
 						
 						if (check == 0) {
-							//p = new Player(parts[1]);
+							p = new Player(parts[1]);
 							System.out.println("PlayerThread: Adding player '" + parts[1] + "' to Lobby.");
-							String playerList = lobby.addPlayer(parts[1]);
+							String playerList = lobby.addPlayer(p);
 							commsLink.put(parts[1], outputStream);
 							String newOp = "BROADCAST:" + playerList;
 							opQueue.add(newOp);
@@ -155,50 +148,39 @@ class PlayerThread extends Thread {
 					}
 					
 					//If R:user:pass:email, used for registration
-					if("REGISTER".equals(parts[0])) {
+					else if("REGISTER".equals(parts[0])) {
 						check = DBUtils.signUp(parts[1], parts[2], parts[3]);
 						System.out.println("PlayerThread: Registration attempt for: " + parts[1] + " resulted in: " + check);
-						outputStream.println("R:" + check);
+						outputStream.println("REGISTER:" + check);
 						outputStream.flush();
 					}
 					
-					System.out.println("Here.");
-					
 					// IF GAMECHOICE:[location#]
-					if("GAMECHOICE".equals(parts[0])) {
-						System.out.println("Hi1.");
-						
+					else if("GAMECHOICE".equals(parts[0])) {
 						// Player is choosing a room to enter
-						System.out.println("h1b");
 						System.out.println("Room chosen = " + parts[1]);
-						
-						String newPlayerList = "";
-						newPlayerList = lobby.movePlayer(p.name, 1);
-						System.out.println("h1c");
-						
-						//String newOp = "BROADCAST:" + newPlayerList;
-						System.out.println("h1d");
-						//opQueue.add(newOp);
-						System.out.println("h1e");
-					}
-					
-					/*
-					if (line.contains(gameChoiceStr)) {
-						System.out.println("Hi2.");
+						int gameRoom = 0;
 						gameRoom = Integer.parseInt(parts[1]);
-						System.out.println("PlayerThread moving player '" + p.name + "' to room " + gameRoom);
-						String newPlayerList = lobby.movePlayer(p.name, gameRoom);
+						String newPlayerList = "";
+						newPlayerList = lobby.movePlayer(p.name, gameRoom);
+						
 						String newOp = "BROADCAST:" + newPlayerList;
 						opQueue.add(newOp);
 					}
-					*/
+					
+					else if("CHAT".equals(parts[0])) {
+						System.out.println("Received chat from user '" + p.name + "': " + line);
+						String newOp = "CHAT:" + line;
+						opQueue.add(newOp);
+					}
 					
 					else {
 						System.out.println("PlayerThread for '" + p.name + "' moving operation '" + line + "' to queue.");
 						String newOp = p.name + ":" + line;
 						opQueue.add(newOp);		
 					}
-					System.out.println("Exiting the here.");
+					
+					System.out.println("Exiting the player thread.");
 				}
 				
 				// If outputStream is null
@@ -279,8 +261,13 @@ class Worker extends Thread {
 			String broadcastMsg = "";
 			broadcastMsg = parts[1] + ":";
 			
-			for (int i = 2; i < Array.getLength(parts); i++) {
-					broadcastMsg = broadcastMsg + parts[i];
+			int i;
+			// Need to append back the parts with the ":"
+			for (i = 2; i < Array.getLength(parts)-1; i++) {
+				broadcastMsg = broadcastMsg + parts[i] + ":";
+			}
+			for (i = Array.getLength(parts)-1; i < Array.getLength(parts); i++) {
+				broadcastMsg = broadcastMsg + parts[i];
 			}
 			
 			for (PrintWriter oneOutput : playerOutputStreams.values()) {

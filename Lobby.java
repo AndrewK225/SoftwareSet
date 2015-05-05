@@ -14,9 +14,9 @@ public class Lobby {
 		//addPlayer("0");
 	}
 
-	public String addPlayer(String playerName) {
-		Player newPlayer = new Player(playerName);
-		
+	public String addPlayer(Player newPlayer) {
+		//Player newPlayer = new Player(playerName);
+		String playerName = newPlayer.name;
 		System.out.println("LobbyClass: Player obj created = " + newPlayer);
 		
 		players.put(playerName, newPlayer);
@@ -55,32 +55,13 @@ public class Lobby {
 	}
 	
 	public String movePlayer(String playerName, int destination) {
-		System.out.println("In movePlayer");
-		//Player p = players.get(playerName);
-		//p.location = destination;
-		//System.out.println("Leaving movePlayer");
-		String playerList = "hi";
-		//playerList = showPlayers();
+		Player p = players.get(playerName);
+		p.location = destination;
+		String playerList = showPlayers();
 		
 		return playerList;
 	}
 	
-	/*
-	public String movePlayer(String playerName, String destination) {
-		System.out.println("Move player with string");
-		/*
-		int dest = Integer.parseInt(destination);
-		System.out.println("In movePlayer");
-		Player p = players.get(playerName);
-		System.out.println("Move player with string");
-		p.movePlayer(dest);
-		System.out.println("Leaving movePlayer");
-		String playerList = showPlayers();
-		return playerList;
-		
-		return destination;
-	}
-	*/
 	public String showPlayers() {
 		System.err.println("LobbyClass: SHOWING PLAYERS");
 		String active = "LBYACTIVE:";
