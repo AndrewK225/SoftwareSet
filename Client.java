@@ -73,7 +73,7 @@ public class Client {
 	public static JPanel mainpanel = new JPanel();
 	public static JPanel boardpanel  = new JPanel();
 	public static JPanel sidepanel = new JPanel();
-	//static JPanel playerpanel  = new JPanel();;
+	public static JPanel toppanel = new JPanel();
 	public static JPanel chatpanel  = new JPanel();;
 	//static JPanel setbuttonpanel  = new JPanel();;
 	//static JPanel deckpanel  = new JPanel();;
@@ -409,7 +409,7 @@ public class Client {
 	    lobbypanel.add(activePlayersBox);
 	    
 	    
-	    chatList = new JTextArea("Some chat in the chatbox\n");
+	    chatList = new JTextArea("Welcome to the lobby!\n");
 	    chatList.setLineWrap(true);
 	    chatList.setWrapStyleWord(true);
 	    chatList.setEditable(false);
@@ -430,18 +430,20 @@ public class Client {
 	
 	private static void createGameGUI() {
 		System.out.println("In here");
-		boardpanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		boardpanel.setPreferredSize(new Dimension(screenWidth,screenHeight));
-		GridLayout cardGridLayout = new GridLayout(3, 7, 3, 3);
+		mainpanel.setLayout(new BorderLayout());
+		//boardpanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		//boardpanel.setPreferredSize(new Dimension(screenWidth*3/4,screenHeight*3/4));
+		GridLayout cardGridLayout = new GridLayout(4,7, 3, 3);
 		boardpanel.setLayout(cardGridLayout);
-		
+	
 		create_components();
-		update_board("45:21:0020:0101:0201:0000:2201:0000:1000:0111:0000:0000:1100:0011:0000:0000:0000:0000:0000:0000:0000:0000:0000");
-		displayBoard(board);
-		
+		update_board("69:21:0020:0101:0201:0100:2201:0110:1000:0111:0000:1100:0011:1101:0020:0101:0201:0100:2201:0110:1000:0111:0000");
+		//displayBoard(board);
+		displayBoard("69:21:0020:0101:0201:0100:2201:0110:1000:0111:0000:1100:0011:1101:0020:0101:0201:0100:2201:0110:1000:0111:0000");
+		mainpanel.add(toppanel, BorderLayout.NORTH);
 		mainpanel.add(boardpanel, BorderLayout.CENTER);
-		mainpanel.add(sidepanel, BorderLayout.CENTER);
-		mainpanel.add(chatpanel, BorderLayout.PAGE_END);
+		mainpanel.add(sidepanel, BorderLayout.EAST);
+		mainpanel.add(chatpanel, BorderLayout.SOUTH);
 		mainpanel.setBackground(Color.WHITE);
 		states.add(mainpanel, GAMESTATE);
 	}
@@ -619,10 +621,12 @@ public class Client {
 	
 	public static void create_components(){
 		create_images_checkboxes();
-		
+		sidepanel.setLayout(new BorderLayout());
+		sidepanel.setPreferredSize(new Dimension(150,400));
+		toppanel.setLayout(new BorderLayout());
 		// Create the top panel that displays the game number
 		JTextField gameID = new JTextField("Game " + gameNum);
-		sidepanel.add(gameID, "1, 1, center, center");
+		toppanel.add(gameID, BorderLayout.WEST );
 		
 		// Create the set button
 		JButton set_button = new JButton("SET!");
@@ -633,23 +637,14 @@ public class Client {
 			}
 		});
 		//setbuttonpanel.add(set_button);
-		
-		sidepanel.setLayout(new FormLayout(new ColumnSpec[] {
-				ColumnSpec.decode("200px"),},
-			new RowSpec[] {
-				RowSpec.decode("100px"),
-				RowSpec.decode("100px"),
-				RowSpec.decode("100px"),
-				RowSpec.decode("100px"),}));
-		
-		sidepanel.add(set_button, "1, 1, center, center");
+		sidepanel.add(set_button,BorderLayout.NORTH);
 		
 		
 		// Display scoreboard/list of players with sets
 		String columnNames[] = { "Player", "Score" };
-		String dataValues[][] = { {"Miraj","10"},{"Abi","45"}};
+		String dataValues[][] = { {"TaylorSwift","0"},{"katyperry","0"}};
 		playertable = new JTable(dataValues,columnNames);
-		sidepanel.add(new JScrollPane(playertable), "1, 2, center, center");
+		sidepanel.add(new JScrollPane(playertable),BorderLayout.CENTER);
 		
 		
 		// Create leave room button to force player back to lobby
@@ -661,13 +656,12 @@ public class Client {
 				gameNum = 0;
 			}
 		});
-		sidepanel.add(leave_button, "1, 3, center, center");
+		sidepanel.add(leave_button,BorderLayout.SOUTH);
 		// leavebuttonpanel.add(leave_button);
 		//create_chat();
 	}
 	
 	public static void create_images_checkboxes(){
-		deck.setPreferredSize(new Dimension(200, 100));
 		for (int i = 0; i < 21; i++){
 			checkBoxes[i] = new JCheckBox(Integer.toString(i+1));
 			checkBoxes[i].setEnabled(true);
@@ -715,7 +709,7 @@ public class Client {
 			int temp = i;
 			for (int j = 0; j < 4; j++){
 				four_digits = (temp%3) + four_digits;
-				temp = i/3;
+				temp = temp/3;
 			}
 			images[i] = new ImageIcon(".//src//setpics//" + four_digits + ".gif");
 		}
@@ -726,8 +720,7 @@ public class Client {
 		String temp = s;
 		int deck_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
 		deck.setText("Cards left in deck: " + deck_size);
-		//deckpanel.add(deck);
-		sidepanel.add(deck, "1, 4, center, center");
+		toppanel.add(deck,BorderLayout.EAST);
 		temp = temp.substring(temp.indexOf(":")+1);
 		int board_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
 		temp = temp.substring(temp.indexOf(":")+1);
