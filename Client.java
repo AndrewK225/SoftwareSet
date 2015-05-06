@@ -433,13 +433,13 @@ public class Client {
 		mainpanel.setLayout(new BorderLayout());
 		//boardpanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		//boardpanel.setPreferredSize(new Dimension(screenWidth*3/4,screenHeight*3/4));
-		GridLayout cardGridLayout = new GridLayout(4,7, 3, 3);
+		GridLayout cardGridLayout = new GridLayout(3,7, 0, 0);
 		boardpanel.setLayout(cardGridLayout);
 	
 		create_components();
 		update_board("69:21:0020:0101:0201:0100:2201:0110:1000:0111:0000:1100:0011:1101:0020:0101:0201:0100:2201:0110:1000:0111:0000");
 		//displayBoard(board);
-		displayBoard("69:21:0020:0101:0201:0100:2201:0110:1000:0111:0000:1100:0011:1101:0020:0101:0201:0100:2201:0110:1000:0111:0000");
+		displayBoard();
 		mainpanel.add(toppanel, BorderLayout.NORTH);
 		mainpanel.add(boardpanel, BorderLayout.CENTER);
 		mainpanel.add(sidepanel, BorderLayout.EAST);
@@ -607,7 +607,7 @@ public class Client {
 					updatedCardStr = updatedCardStr + parts[i];
 				}
 				
-				displayBoard(updatedCardStr);
+				displayBoard();
 			}
 		}
 	}
@@ -715,14 +715,17 @@ public class Client {
 		}
 	}
 	
-	public static void displayBoard(String s){
+	public static void displayBoard(){
 		//displays the cards on the board, given the board in the format deck_size:board_size:card1:card2:... and it will display.
-		String temp = s;
+		String temp = board;
 		int deck_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
 		deck.setText("Cards left in deck: " + deck_size);
 		toppanel.add(deck,BorderLayout.EAST);
 		temp = temp.substring(temp.indexOf(":")+1);
 		int board_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
+		System.out.println(board);
+		System.out.println("board_size = " + board_size);
+		
 		temp = temp.substring(temp.indexOf(":")+1);
 		String[] cards = new String[board_size];
 		
