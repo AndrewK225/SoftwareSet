@@ -3,11 +3,13 @@
 public class Board {
 	int num_cards;
 	Card[] cards = new Card[21]; //board is capped at 21 cards
+	
 	public Board(Deck deck){ //create a new board, drawing the top 12 cards from a given deck
 		for (num_cards = 0; num_cards<12;num_cards++){
 			cards[num_cards] = deck.drawCard();
 		}
 	}
+	
 	public String displayBoard(){ // display, in order, the contents of the board
 		String retStr = "";
         System.out.println("The board contains " + num_cards + " cards.");
@@ -18,15 +20,18 @@ public class Board {
             if (i != (num_cards-1))
                 retStr += ":";
 		}
+		int deckSize = 81-num_cards;
+		retStr = deckSize + ":" + num_cards + ":" + retStr;
         return retStr;
 	}
+	
 	public void addTriplet(Deck deck){  //take the top three cards of the deck and put them on the board
 		for (int i = 0; i < 3; i++){
 			cards[num_cards+i] = deck.drawCard();
 		}
 		num_cards += 3;
 	}
-	public void addTriplet(Deck deck, int c1, int c2, int c3){  //take the top three cards of the deck and put them on the board
+	public void replaceTriplet(Deck deck, int c1, int c2, int c3){  //take the top three cards of the deck and put them on the board
 		cards[c1] = deck.drawCard();
 		cards[c2] = deck.drawCard();
 		cards[c3] = deck.drawCard();

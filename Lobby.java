@@ -1,8 +1,8 @@
 import java.util.*;
 public class Lobby {
 	
-	private static Game games[] = new Game[3];
-	private static Hashtable<String,Player> players = null;
+	public static Game games[] = new Game[3];
+	public Hashtable<String,Player> players = null;
 	
 	//Constructor
 	public Lobby (int number_of_games, Hashtable<String, Player> playerList) {
@@ -99,5 +99,10 @@ public class Lobby {
 		
 		System.out.println("Active string = " + active);
 		return active;
+	}
+	
+	public static String check_set(String player, int game_number, int card1, int card2, int card3) {
+		String updateStr = games[game_number-1].evaluateSetClaim(player, card1, card2, card3);
+		return updateStr;
 	}
 }

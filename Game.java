@@ -10,12 +10,22 @@ public class Game{
 	Player declare_set_player;
 	int[] inputs;
 	int num_inputs = 0;
+	
+	public Game(int num){
+		gameNum = num;
+		deck = new Deck();
+		deck.shuffle();
+		board = new Board(deck);
+	}
+	
 	public void addPlayer(String name, Player player){
 		players.put(name,player);
 	}
+	
 	public void removePlayer(String name, Player player){
 		players.remove(name);
 	}
+	
 	public void declare_set(String name){
 		lock_set = true;
 		timer = new Timer();
@@ -46,33 +56,35 @@ public class Game{
 			board.addTriplet(deck);
 		}
 		if((lock_set) && (num_inputs == 3)){
-			process_input(declare_set_player.name,inputs[0],inputs[1],inputs[2]);
+			evaluateSetClaim(declare_set_player.name,inputs[0],inputs[1],inputs[2]);
 			new Release_lock();
 		}
 	}
 	
-	public void process_input(String name, int input1,int input2,int input3){
-		if (board.is_set(input1,input2,input3)){ 
+	public String evaluateSetClaim(String name, int input1,int input2,int input3){
+		if (board.is_set(input1,input2,input3)) {
+			
+			// If too many cards on the board, or if no cards left in the deck, just remove the cards
 			if ((board.num_cards) > 12 || (deck.num_cards < 3)){
 				//System.out.println("removing 3 cards");
 				board.removeTriplet(input1,input2,input3);
-			}else if (board.num_cards == 12){
-				//System.out.println("replacing 3 cards");
-				board.addTriplet(deck,input1,input2,input3);
 			}
-			System.out.println("You found a set!");
+			
+			else if (board.num_cards == 12){
+				//System.out.println("replacing 3 cards");
+				board.replaceTriplet(deck,input1,input2,input3);
+			}
+			
+			System.out.println("Player " + name + " found a set!");
 			players.get(name).score_point();
+			String cardUpdateStr = board.displayBoard();
+			return cardUpdateStr;
 		}
-		else{
+		
+		else {
 			System.out.println("Not a set!");
+			return null;
 		}
-	}
-	
-	public Game(int num){
-		gameNum = num;
-		deck = new Deck();
-		deck.shuffle();
-		board = new Board(deck);
 	}
 }
 

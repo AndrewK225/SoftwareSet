@@ -4,10 +4,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.net.Socket;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
+
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
 
 import java.util.*;
 import java.util.Timer;
@@ -23,7 +29,7 @@ public class Client {
 	
 	private static String commDelim = ":";
 	
-	private static Timer timer = new Timer();
+	private static JPanel timer;
 	
 	static int screenWidth;
 	static int screenHeight;
@@ -61,9 +67,49 @@ public class Client {
 	
 	private static Socket clientSocket;
 	
+	
+	// Game Room Stuff
+	//panels
+	public static JPanel mainpanel = new JPanel();
+	public static JPanel boardpanel  = new JPanel();
+	public static JPanel sidepanel = new JPanel();
+	//static JPanel playerpanel  = new JPanel();;
+	public static JPanel chatpanel  = new JPanel();;
+	//static JPanel setbuttonpanel  = new JPanel();;
+	//static JPanel deckpanel  = new JPanel();;
+	//static JPanel leavebuttonpanel  = new JPanel();
+	public static JPanel chat_enterpanel = new JPanel();
+	public static JPanel chat_textbox = new JPanel();
+	public static JPanel chat_history = new JPanel();
+	//panel components
+	public static Icon[] images = new ImageIcon[81];
+	public static JCheckBox[] checkBoxes = new JCheckBox[21];
+	public static JLabel[] blanks = new JLabel[21];
+	public static JTable playertable = new JTable();
+	public static JLabel deck = new JLabel();
+	//global dimensions
+	public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();;
+	//game number
+	public static int gameNum = 0;
+	//set_lock variables
+	public static boolean lock_set = false;
+	public static String setChain = "";
+	public static int counter = 0;
+	//players
+	public String playername;
+	public static String[] players = {};
+	public static int num_players;
+	public static HashMap < String, Integer > scoreboard;
+	//board
+	public static String board = "";
+	
+	
+	
 	public static void main(String[] args) {
 		screenHeight = 768;
 		screenWidth = 1024;
+		
+		gameNum = 0;
 		
 		mainframe = new JFrame("Set Client");
 		states = new JPanel(new CardLayout());
@@ -84,6 +130,7 @@ public class Client {
 		
 		createLobby();
 		createLogin();
+		createGameGUI();
 		
 		int connectAttempt = 0;
 		while (clientSocket == null) {
@@ -312,7 +359,9 @@ public class Client {
 	    	public void actionPerformed(ActionEvent e) {
 	    		// Tell server game 1 chosen...
 	    		System.out.println(e.getActionCommand() + " was pressed ");
+	    		gameNum = 1;
 	    		sendMessage("GAMECHOICE:1");
+	    		switchState(GAME);
 	    	}
 	    });
 	    //game1.setEnabled(true);
@@ -324,7 +373,9 @@ public class Client {
 	    JButton game2 = new JButton("Game2");
 	    game2.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent arg0) {
+	    		gameNum = 2;
 	    		sendMessage("GAMECHOICE:2");
+	    		switchState(GAME);
 	    	}
 	    });
 	    game2.setBounds(gameBtnWidth + 2*padding, padding, gameBtnWidth, gameBtnHeight);
@@ -334,7 +385,9 @@ public class Client {
 	    JButton game3 = new JButton("Game3");
 	    game3.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
+	    		gameNum = 3;
 	    		sendMessage("GAMECHOICE:3");
+	    		switchState(GAME);
 	    	}
 	    });
 	    game3.setBounds(2*gameBtnWidth + 3*padding, padding, gameBtnWidth, gameBtnHeight);
@@ -375,7 +428,23 @@ public class Client {
 	    states.add(lobbypanel, LOBBYSTATE);
 	}
 	
-	
+	private static void createGameGUI() {
+		System.out.println("In here");
+		boardpanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		boardpanel.setPreferredSize(new Dimension(screenWidth,screenHeight));
+		GridLayout cardGridLayout = new GridLayout(3, 7, 3, 3);
+		boardpanel.setLayout(cardGridLayout);
+		
+		create_components();
+		update_board("45:21:0020:0101:0201:0000:2201:0000:1000:0111:0000:0000:1100:0011:0000:0000:0000:0000:0000:0000:0000:0000:0000");
+		displayBoard(board);
+		
+		mainpanel.add(boardpanel, BorderLayout.CENTER);
+		mainpanel.add(sidepanel, BorderLayout.CENTER);
+		mainpanel.add(chatpanel, BorderLayout.PAGE_END);
+		mainpanel.setBackground(Color.WHITE);
+		states.add(mainpanel, GAMESTATE);
+	}
 	
 	
 	private static void switchState(int endState) {
@@ -403,7 +472,8 @@ public class Client {
 			case GAME:
 				currState = GAME;
 				frames.show(states, GAMESTATE);
-				mainframe.setPreferredSize(new Dimension(1024, 768));
+				//theGamePanel.setPreferredSize(new Dimension(1024, 768));
+				mainframe.setPreferredSize(new Dimension(1300, 768));
 				mainframe.setLocation(new Point(0,0));
 				mainframe.pack();
 				System.out.println("CHANGED TO GAME STATE WITH " + Integer.toString(numCards) + " CARDS\n");
@@ -519,6 +589,25 @@ public class Client {
 		    chatVertBar.setValue( chatVertBar.getMaximum() );
 			//mainframe.pack();
 		}
+		
+		else if ("UPDATECARDS".equals(parts[0])) {
+			System.out.println("Got update cards request...");
+			int affectedGame = Integer.parseInt(parts[1]);
+			if (affectedGame == gameNum) {
+				String updatedCardStr = "";
+				
+				int i;
+				// Need to append back the parts with the ":"
+				for (i = 2; i < Array.getLength(parts)-1; i++) {
+					updatedCardStr = updatedCardStr + parts[i] + ":";
+				}
+				for (i = Array.getLength(parts)-1; i < Array.getLength(parts); i++) {
+					updatedCardStr = updatedCardStr + parts[i];
+				}
+				
+				displayBoard(updatedCardStr);
+			}
+		}
 	}
 	
 	private static void sendMessage (String message) {
@@ -526,6 +615,145 @@ public class Client {
     		socketWriter.println(message);
 			socketWriter.flush();
     	}
+	}
+	
+	public static void create_components(){
+		create_images_checkboxes();
+		
+		// Create the top panel that displays the game number
+		JTextField gameID = new JTextField("Game " + gameNum);
+		sidepanel.add(gameID, "1, 1, center, center");
+		
+		// Create the set button
+		JButton set_button = new JButton("SET!");
+		set_button.setPreferredSize(new Dimension(75, 25));
+		set_button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//declare_set();
+			}
+		});
+		//setbuttonpanel.add(set_button);
+		
+		sidepanel.setLayout(new FormLayout(new ColumnSpec[] {
+				ColumnSpec.decode("200px"),},
+			new RowSpec[] {
+				RowSpec.decode("100px"),
+				RowSpec.decode("100px"),
+				RowSpec.decode("100px"),
+				RowSpec.decode("100px"),}));
+		
+		sidepanel.add(set_button, "1, 1, center, center");
+		
+		
+		// Display scoreboard/list of players with sets
+		String columnNames[] = { "Player", "Score" };
+		String dataValues[][] = { {"Miraj","10"},{"Abi","45"}};
+		playertable = new JTable(dataValues,columnNames);
+		sidepanel.add(new JScrollPane(playertable), "1, 2, center, center");
+		
+		
+		// Create leave room button to force player back to lobby
+		JButton leave_button = new JButton("<html>Leave<br>room</html>");
+		leave_button.setPreferredSize(new Dimension(75, 50));
+		leave_button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//leave_room();
+				gameNum = 0;
+			}
+		});
+		sidepanel.add(leave_button, "1, 3, center, center");
+		// leavebuttonpanel.add(leave_button);
+		//create_chat();
+	}
+	
+	public static void create_images_checkboxes(){
+		deck.setPreferredSize(new Dimension(200, 100));
+		for (int i = 0; i < 21; i++){
+			checkBoxes[i] = new JCheckBox(Integer.toString(i+1));
+			checkBoxes[i].setEnabled(true);
+			checkBoxes[i].setPreferredSize(new Dimension(200,200));
+			blanks[i] = new JLabel();
+			checkBoxes[i].addActionListener(new ActionListener(){
+				public void actionPerformed (ActionEvent e){
+					AbstractButton abstractButton = (AbstractButton) e.getSource();
+					boolean selected = abstractButton.isSelected();
+					if (selected)
+						counter++;
+					else
+						counter--;
+					
+					System.out.println(abstractButton.getName() + " was pressed");
+					setChain = setChain + abstractButton.getName() + ":";
+					System.out.println("setChain = " + setChain);
+					
+
+					if(counter == 3){
+						sendMessage("CLAIMSET:" + gameNum + ":"+ setChain);						
+					}
+					
+					//kind of a kluge to detect if the box was being checked or unchecked
+					if("S:"!=setChain) {  //if something has already been selected it would be in the string
+						//System.out.println("in the if");
+						String[] parts = setChain.split(":"); //so know which cards have been selected
+						
+						/*
+						if(e.getActionCommand().equals(parts[1])|| e.getActionCommand().equals(parts[parts.length-1])) { //if the card if pressed again then user wanted it unchecked
+							//System.out.println(setChain);
+							setChain = setChain.replace(e.getActionCommand() + ":", "");
+							System.out.println(e.getActionCommand()+" was unchecked");
+						}
+						*/
+					}
+					System.out.println(e.getSource());
+					System.out.println("Number of cards selected = " + counter);
+					System.out.println(setChain);
+				}
+			});
+		}
+		for (int i = 0; i < 81; i++){
+			String four_digits = "";
+			int temp = i;
+			for (int j = 0; j < 4; j++){
+				four_digits = (temp%3) + four_digits;
+				temp = i/3;
+			}
+			images[i] = new ImageIcon(".//src//setpics//" + four_digits + ".gif");
+		}
+	}
+	
+	public static void displayBoard(String s){
+		//displays the cards on the board, given the board in the format deck_size:board_size:card1:card2:... and it will display.
+		String temp = s;
+		int deck_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
+		deck.setText("Cards left in deck: " + deck_size);
+		//deckpanel.add(deck);
+		sidepanel.add(deck, "1, 4, center, center");
+		temp = temp.substring(temp.indexOf(":")+1);
+		int board_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
+		temp = temp.substring(temp.indexOf(":")+1);
+		String[] cards = new String[board_size];
+		
+		for (int i = 0; i < board_size-1; i++){
+			cards[i] = (temp.substring(0,Math.max(1,temp.indexOf(":"))));
+			temp = temp.substring(temp.indexOf(":")+1);
+		}
+		
+		cards[board_size-1] = temp;
+		for (int i = 0; i < board_size; i++){
+			int j = Character.getNumericValue(cards[i].charAt(0))*27+Character.getNumericValue(cards[i].charAt(1))*9+Character.getNumericValue(cards[i].charAt(2))*3+Character.getNumericValue(cards[i].charAt(3)*1);
+			checkBoxes[i].setIcon(new CheckBoxIcon(checkBoxes[i], images[j], SwingConstants.CENTER, SwingConstants.TOP));	
+			checkBoxes[i].setName(Integer.toString(i));
+			checkBoxes[i].setText("");
+			boardpanel.add(checkBoxes[i]);
+		}
+		for (int i = board_size; i < 21; i++){
+			//boardpanel.add(blanks[i]);
+			boardpanel.add(blanks[i]);
+		}
+	}
+	
+	public static void update_board(String s){
+		board = s;
 	}
 
 }

@@ -166,12 +166,33 @@ class PlayerThread extends Thread {
 						
 						String newOp = "BROADCAST:" + newPlayerList;
 						opQueue.add(newOp);
+						
+						// Also have to send that player the cards in play in that game
+						String cardsOnBoard = lobby.games[gameRoom-1].board.displayBoard();
+						cardsOnBoard = "UPDATECARDS:" + Integer.toString(gameRoom) + ":" + cardsOnBoard;
+						outputStream.println(cardsOnBoard);
+						System.out.println(cardsOnBoard);
+						outputStream.flush();
 					}
 					
 					else if("CHAT".equals(parts[0])) {
 						System.out.println("Received chat from user '" + p.name + "': " + line);
 						String newOp = "CHAT:" + line;
 						opQueue.add(newOp);
+					}
+					
+					else if("CLAIMSET".equals(parts[0])) {
+						System.out.println("Received a set triplet request from user '" + p.name + "': " + line);
+						int gnum = Integer.parseInt(parts[1]);
+						int card1 = Integer.parseInt(parts[2]);
+						int card2 = Integer.parseInt(parts[3]);
+						int card3 = Integer.parseInt(parts[4]);
+						String result = lobby.check_set(p.name,gnum,card1,card2,card3);
+						
+						if (result != null) {
+							String newOp = "BROADCAST:UPDATECARDS:" + gnum + ":" + result;
+							opQueue.add(newOp);
+						}
 					}
 					
 					else {
@@ -298,6 +319,12 @@ class Worker extends Thread {
 				String newPlayerList = lobby.movePlayer(uname, gameRoom);
 				String newOp = "BROADCAST:" + newPlayerList;
 				opQueue.add(newOp);
+				
+				// Also have to send that player the cards in play in that game
+				String cardsOnBoard = lobby.games[gameRoom-1].board.displayBoard();
+				os.println(cardsOnBoard);
+				System.out.println(cardsOnBoard);
+				os.flush();
 			}
 			
 			// If player is exiting the entire game
