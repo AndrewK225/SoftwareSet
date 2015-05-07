@@ -124,6 +124,10 @@ class PlayerThread extends Thread {
 							String newPlayerList = lobby.removePlayer(p);
 							String newOp = "BROADCAST:" + newPlayerList;
 							opQueue.add(newOp);
+							
+							String lobbyInfo = lobby.showLobbyInfo();
+							newOp = "BROADCAST:" + lobbyInfo;
+							opQueue.add(newOp);
 						}
 						
 						running = false;

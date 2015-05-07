@@ -3,6 +3,10 @@ public class Lobby {
 	
 	public static Game games[] = new Game[3];
 	public Hashtable<String,Player> players = null;
+	public int game1Pop = 0;
+	public int game2Pop = 0;
+	public int game3Pop = 0;
+	
 	
 	//Constructor
 	public Lobby (int number_of_games, Hashtable<String, Player> playerList) {
@@ -56,10 +60,48 @@ public class Lobby {
 	
 	public String movePlayer(String playerName, int destination) {
 		Player p = players.get(playerName);
+		
+		// If player is moving into a game from the lobby
+		if (destination > 0) {
+			if (destination == 1)
+				game1Pop++;
+				
+			else if (destination == 2)
+				game2Pop++;
+				
+			else if (destination == 3)
+				game3Pop++; 
+		}
+		
+		// Else the player is returning to lobby from a game
+		else {
+			if (p.location == 1)
+				game1Pop--;
+			
+			else if (p.location == 2)
+				game2Pop--;
+				
+			else if (p.location == 3)
+				game3Pop--;
+		}
+
 		p.location = destination;
 		String playerList = showPlayers();
 		
+		
 		return playerList;
+	}
+	
+	public String showLobbyInfo() {
+		String roomDetails = "LobbyInfo:";
+		int game1decksize = games[0].getDeckSize();
+		int game2decksize = games[1].getDeckSize();
+		int game3decksize = games[2].getDeckSize();
+		roomDetails = RoomDetails + "Game1:" + game1Pop + " players with " + game1decksize " cards left in the deck.:";
+		roomDetails = RoomDetails + "Game2:" + game2Pop + " players with " + game2decksize " cards left in the deck.:";
+		roomDetails = RoomDetails + "Game3:" + game3Pop + " players with " + game3decksize " cards left in the deck.:";
+		
+		return roomDetails;
 	}
 	
 	public String showPlayers() {

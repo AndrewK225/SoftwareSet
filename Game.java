@@ -14,6 +14,8 @@ public class Game{
 	public Game(int num, Hashtable <String, Player> listofplayers){
 		System.out.println("Making game number " + num);
 		gameNum = num;
+		
+		// When making a new game, create a new deck, and pass it over to the Board (which displays+draws the cards)
 		deck = new Deck();
 		deck.shuffle();
 		board = new Board(deck);
@@ -28,19 +30,20 @@ public class Game{
 		players.remove(name);
 	}
 	
-	public void declare_set(String name){
+	public void declare_set(String name) {
 		lock_set = true;
 		timer = new Timer();
 		timer.schedule(new Release_lock(),5000);
 		declare_set_player = players.get(name);
 	}
 	
-	class Release_lock extends TimerTask{
+	class Release_lock extends TimerTask {
 		public void run(){
 			lock_set = false;
 			num_inputs = 0;
 		}
 	}
+	
 	public void enter_input(int x){
 		if (num_inputs < 3){
 			inputs[num_inputs] = x;
@@ -75,6 +78,10 @@ public class Game{
 			players.get(name).deduct_point();
 			return null;
 		}
+	}
+	
+	public int getDeckSize() {
+		return deck.num_cards;
 	}
 }
 

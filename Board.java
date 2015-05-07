@@ -3,11 +3,15 @@
 public class Board {
 	int num_cards;
 	Card[] cards = new Card[21]; //board is capped at 21 cards
+	Deck myDeck = null;
 	
 	public Board(Deck deck){ //create a new board, drawing the top 12 cards from a given deck
+		myDeck = deck;
+		
 		for (num_cards = 0; num_cards<12;num_cards++){
 			cards[num_cards] = deck.drawCard();
 		}
+		
 		System.out.println("deck size is " + deck.num_cards);
 		while ((!is_set())&&(deck.num_cards > 2)){ 
 			//System.out.println("Adding cards. Deck size: " + deck.num_cards);
@@ -26,10 +30,12 @@ public class Board {
             if (i != (num_cards-1))
                 retStr += ":";
 		}
-		int deckSize = 81-num_cards;
+		
+		int deckSize = myDeck.num_cards;
+		
 		retStr = deckSize + ":" + num_cards + ":" + retStr;
 		System.out.println("Displaying board: " + retStr);
-        return retStr;
+      return retStr;
 	}
 	
 	public void addTriplet(Deck deck){  //take the top three cards of the deck and put them on the board
@@ -43,7 +49,8 @@ public class Board {
 		cards[c2] = deck.drawCard();
 		cards[c3] = deck.drawCard();
 	}
-    public void removeTriplet(int c1, int c2, int c3){ //removes the card from the board, assuming the board isn't empty.
+	
+    public void removeTriplet(int c1, int c2, int c3) { //removes the card from the board, assuming the board isn't empty.
     	int[] indices = {c1, c2 ,c3};
     	for (int i = 0; i < 3; i++){
     		for (int j = 0; j < 2; j++){
@@ -60,7 +67,8 @@ public class Board {
         	}
         	num_cards--;
     	}
-    }
+   }
+   
 	public boolean is_set(int i, int j, int k){ //given the indices of three cards on the board, do they form a set?
 		//System.out.println("Calling is_set for particular triplet " + i + "\t" + j + "\t" + k);
 		if ((cards[i]).color != (cards[j]).color){
@@ -105,7 +113,8 @@ public class Board {
 		//System.out.println("shades form a set");
 		return true;
 	}
-	public boolean is_set(){ //given the current board, is there a set on the board?
+	
+	public boolean is_set() { //given the current board, is there a set on the board?
 		for (int i = 0; i < num_cards-1; i++){
 			for (int j = i+1; j < num_cards-1; j++){
 				for (int k = j+1; k < num_cards-1; k++){
