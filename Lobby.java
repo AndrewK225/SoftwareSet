@@ -97,9 +97,9 @@ public class Lobby {
 		int game1decksize = games[0].getDeckSize();
 		int game2decksize = games[1].getDeckSize();
 		int game3decksize = games[2].getDeckSize();
-		roomDetails = RoomDetails + "Game1:" + game1Pop + " players with " + game1decksize " cards left in the deck.:";
-		roomDetails = RoomDetails + "Game2:" + game2Pop + " players with " + game2decksize " cards left in the deck.:";
-		roomDetails = RoomDetails + "Game3:" + game3Pop + " players with " + game3decksize " cards left in the deck.:";
+		roomDetails = roomDetails + "Game1:" + game1Pop + " players with " + game1decksize + " cards left in the deck.:";
+		roomDetails = roomDetails + "Game2:" + game2Pop + " players with " + game2decksize + " cards left in the deck.:";
+		roomDetails = roomDetails + "Game3:" + game3Pop + " players with " + game3decksize + " cards left in the deck.:";
 		
 		return roomDetails;
 	}
