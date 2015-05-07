@@ -8,6 +8,12 @@ public class Board {
 		for (num_cards = 0; num_cards<12;num_cards++){
 			cards[num_cards] = deck.drawCard();
 		}
+		System.out.println("deck size is " + deck.num_cards);
+		while ((!is_set())&&(deck.num_cards > 2)){ 
+			//System.out.println("Adding cards. Deck size: " + deck.num_cards);
+			addTriplet(deck);
+			System.out.println("in while loop, deck size is: " + deck.num_cards);
+		}
 	}
 	
 	public String displayBoard(){ // display, in order, the contents of the board
@@ -22,6 +28,7 @@ public class Board {
 		}
 		int deckSize = 81-num_cards;
 		retStr = deckSize + ":" + num_cards + ":" + retStr;
+		System.out.println("Displaying board: " + retStr);
         return retStr;
 	}
 	
@@ -102,7 +109,6 @@ public class Board {
 		for (int i = 0; i < num_cards-1; i++){
 			for (int j = i+1; j < num_cards-1; j++){
 				for (int k = j+1; k < num_cards-1; k++){
-					//System.out.println("testing if set " + i + "\t" + j + "\t" + k);
 					if (is_set(i,j,k)){
 						System.out.println("Found a set in the board: " + i + "\t" + j + "\t" + k);
 						return true;

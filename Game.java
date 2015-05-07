@@ -3,7 +3,7 @@ import java.util.*;
 public class Game{
 	Deck deck;
 	Board board;
-	HashMap <String, Player> players;
+	Hashtable <String, Player> players;
 	Timer timer;
 	boolean lock_set = false;
 	int gameNum;
@@ -11,11 +11,13 @@ public class Game{
 	int[] inputs;
 	int num_inputs = 0;
 	
-	public Game(int num){
+	public Game(int num, Hashtable <String, Player> listofplayers){
+		System.out.println("Making game number " + num);
 		gameNum = num;
 		deck = new Deck();
 		deck.shuffle();
 		board = new Board(deck);
+		players = listofplayers;
 	}
 	
 	public void addPlayer(String name, Player player){
@@ -39,43 +41,30 @@ public class Game{
 			num_inputs = 0;
 		}
 	}
-	public boolean is_over(){
-		return ((deck.num_cards < 3) && (!board.is_set())); 
-	}
 	public void enter_input(int x){
 		if (num_inputs < 3){
 			inputs[num_inputs] = x;
 			num_inputs++;
 		}
 	}
-	public void loop(){
-		//this is the function that keeps being called as the game is running
-		board.displayBoard();
-		while ((!board.is_set())&&(deck.num_cards > 2)&&(!lock_set)){ 
-			//System.out.println("Adding cards. Deck size: " + deck.num_cards);
-			board.addTriplet(deck);
-		}
-		if((lock_set) && (num_inputs == 3)){
-			evaluateSetClaim(declare_set_player.name,inputs[0],inputs[1],inputs[2]);
-			new Release_lock();
-		}
-	}
 	
 	public String evaluateSetClaim(String name, int input1,int input2,int input3){
+		System.out.println("evaluateSetClaim");
 		if (board.is_set(input1,input2,input3)) {
 			
 			// If too many cards on the board, or if no cards left in the deck, just remove the cards
 			if ((board.num_cards) > 12 || (deck.num_cards < 3)){
-				//System.out.println("removing 3 cards");
+				System.out.println("removing 3 cards");
 				board.removeTriplet(input1,input2,input3);
 			}
 			
 			else if (board.num_cards == 12){
-				//System.out.println("replacing 3 cards");
+				System.out.println("replacing 3 cards");
 				board.replaceTriplet(deck,input1,input2,input3);
 			}
 			
 			System.out.println("Player " + name + " found a set!");
+			System.out.println("players.getname = " + players.get(name));
 			players.get(name).score_point();
 			String cardUpdateStr = board.displayBoard();
 			return cardUpdateStr;
@@ -83,6 +72,7 @@ public class Game{
 		
 		else {
 			System.out.println("Not a set!");
+			players.get(name).deduct_point();
 			return null;
 		}
 	}

@@ -14,8 +14,14 @@ public class Player {
 		this.score++;
 	}
 	
+	public void deduct_point() {
+		this.score--;
+	}
+	
 	public void movePlayer(int destination) {
-		System.out.println("Wrong");
+		if (location != 0 && destination == 0) {
+			this.score = 0;
+		}
 		this.location = destination;
 	}
 	

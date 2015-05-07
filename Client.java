@@ -101,9 +101,8 @@ public class Client {
 	public static int num_players;
 	public static HashMap < String, Integer > scoreboard;
 	//board
-	public static String board = "";
-	
-	
+	public static String board = "69:21:0020:0101:0201:0100:2201:0110:1000:0111:0000:1100:0011:1101:0020:0101:0201:0100:2201:0110:1000:0111:0000";
+	static int[] checked = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
 	public static void main(String[] args) {
 		screenHeight = 768;
@@ -607,7 +606,7 @@ public class Client {
 					updatedCardStr = updatedCardStr + parts[i];
 				}
 				
-				displayBoard();
+				update_board(updatedCardStr);
 			}
 		}
 	}
@@ -633,7 +632,8 @@ public class Client {
 		set_button.setPreferredSize(new Dimension(75, 25));
 		set_button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//declare_set();
+				lock_set = true;
+				
 			}
 		});
 		//setbuttonpanel.add(set_button);
@@ -669,38 +669,34 @@ public class Client {
 			blanks[i] = new JLabel();
 			checkBoxes[i].addActionListener(new ActionListener(){
 				public void actionPerformed (ActionEvent e){
-					AbstractButton abstractButton = (AbstractButton) e.getSource();
-					boolean selected = abstractButton.isSelected();
-					if (selected)
+					int index = boardpanel.getComponentZOrder((Component) e.getSource());
+					if (checkBoxes[index].isSelected()){
+						checked[index] = 1;
 						counter++;
-					else
-						counter--;
-					
-					System.out.println(abstractButton.getName() + " was pressed");
-					setChain = setChain + abstractButton.getName() + ":";
-					System.out.println("setChain = " + setChain);
-					
-
-					if(counter == 3){
-						sendMessage("CLAIMSET:" + gameNum + ":"+ setChain);						
+					} 
+					else{
+						checked[index] = 0;
+						if (counter > 0)
+							counter--;
 					}
 					
-					//kind of a kluge to detect if the box was being checked or unchecked
-					if("S:"!=setChain) {  //if something has already been selected it would be in the string
-						//System.out.println("in the if");
-						String[] parts = setChain.split(":"); //so know which cards have been selected
-						
-						/*
-						if(e.getActionCommand().equals(parts[1])|| e.getActionCommand().equals(parts[parts.length-1])) { //if the card if pressed again then user wanted it unchecked
-							//System.out.println(setChain);
-							setChain = setChain.replace(e.getActionCommand() + ":", "");
-							System.out.println(e.getActionCommand()+" was unchecked");
+					System.out.println("Now checked (" + index + ") = " + checked[index]);
+					
+					
+					if ((counter == 3)&&(lock_set)){
+						for (int m = 0; m < 21; m++){
+							if (checked[m]==1){
+								checkBoxes[m].setSelected(false);
+								setChain += (":" + m);
+								counter++;
+							}
 						}
-						*/
+						lock_set = false;
+						
+						System.out.println("CLAIMSET:" + gameNum + setChain);
+						sendMessage("CLAIMSET:" + gameNum + setChain);
 					}
-					System.out.println(e.getSource());
-					System.out.println("Number of cards selected = " + counter);
-					System.out.println(setChain);
+					
 				}
 			});
 		}
@@ -718,13 +714,14 @@ public class Client {
 	public static void displayBoard(){
 		//displays the cards on the board, given the board in the format deck_size:board_size:card1:card2:... and it will display.
 		String temp = board;
+		//System.out.println("temp = " + temp);
 		int deck_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
 		deck.setText("Cards left in deck: " + deck_size);
 		toppanel.add(deck,BorderLayout.EAST);
 		temp = temp.substring(temp.indexOf(":")+1);
 		int board_size = Integer.parseInt((temp.substring(0,temp.indexOf(":"))));
-		System.out.println(board);
-		System.out.println("board_size = " + board_size);
+		//System.out.println(board);
+		//System.out.println("board_size = " + board_size);
 		
 		temp = temp.substring(temp.indexOf(":")+1);
 		String[] cards = new String[board_size];
@@ -742,14 +739,49 @@ public class Client {
 			checkBoxes[i].setText("");
 			boardpanel.add(checkBoxes[i]);
 		}
+		/*
+		for (int i = board_size; i < 21; i++){
+			boardpanel.add(blanks[i]);
+		}
+		*/
+	}
+	
+	public static void update_board(String newCardsStr){
+		//displays the cards on the board, given the board in the format deck_size:board_size:card1:card2:... and it will display.
+		int deck_size = Integer.parseInt((newCardsStr.substring(0,newCardsStr.indexOf(":"))));
+		deck.setText("Cards left in deck: " + deck_size);
+		toppanel.add(deck,BorderLayout.EAST);
+		
+		newCardsStr = newCardsStr.substring(newCardsStr.indexOf(":")+1);
+		int board_size = Integer.parseInt((newCardsStr.substring(0,newCardsStr.indexOf(":"))));
+		
+		System.out.println(board);
+		System.out.println("board_size = " + board_size);
+		
+		newCardsStr = newCardsStr.substring(newCardsStr.indexOf(":")+1);
+		String[] cards = new String[board_size];
+		
+		for (int i = 0; i < board_size-1; i++){
+			cards[i] = (newCardsStr.substring(0,Math.max(1,newCardsStr.indexOf(":"))));
+			newCardsStr = newCardsStr.substring(newCardsStr.indexOf(":")+1);
+		}
+		
+		cards[board_size-1] = newCardsStr;
+		for (int i = 0; i < board_size; i++){
+			int j = Character.getNumericValue(cards[i].charAt(0))*27+Character.getNumericValue(cards[i].charAt(1))*9+Character.getNumericValue(cards[i].charAt(2))*3+Character.getNumericValue(cards[i].charAt(3)*1);
+			checkBoxes[i].setIcon(new CheckBoxIcon(checkBoxes[i], images[j], SwingConstants.CENTER, SwingConstants.TOP));	
+		}
+		
+		for (int i = board_size; i < 21; i++){
+			checkBoxes[i].setVisible(false);	
+		}
+		
+		/*
 		for (int i = board_size; i < 21; i++){
 			//boardpanel.add(blanks[i]);
 			boardpanel.add(blanks[i]);
 		}
-	}
-	
-	public static void update_board(String s){
-		board = s;
+		*/
 	}
 
 }

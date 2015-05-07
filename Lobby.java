@@ -9,7 +9,7 @@ public class Lobby {
 		players = playerList;
 		for(int i = 0; i < number_of_games; i++) {
 			//create games
-			games[i] = new Game(i);
+			games[i] = new Game(i, players);
 		}
 		//addPlayer("0");
 	}
