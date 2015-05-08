@@ -178,6 +178,10 @@ class PlayerThread extends Thread {
 						String newOp = "BROADCAST:" + newPlayerList;
 						opQueue.add(newOp);
 						
+						String welcomeMsg = "GAMENOTIFICATION:" + gameRoom + ":Welcome to Game Room " + gameRoom;
+						outputStream.println(welcomeMsg);
+						outputStream.flush();
+						
 						String lobbyInfo = lobby.showLobbyInfo();
 						newOp = "BROADCAST:" + lobbyInfo;
 						opQueue.add(newOp);
@@ -213,20 +217,35 @@ class PlayerThread extends Thread {
 							if (result.substring(0, 8)!="GAMEOVER"){
 								String newOp = "BROADCAST:UPDATECARDS:" + gameNum + ":" + result;
 								opQueue.add(newOp);
+								
+								String gamenotif = "BROADCAST:GAMENOTIFICATION:" + gameNum + ":" + p.name + " found a set! 1 Point for Gryffindor!";
+								opQueue.add(gamenotif);
+								
+								String releaseStr = "BROADCAST:RELEASELOCK" + gameNum;
+								opQueue.add(releaseStr);
 							}
 							else {
-								// Game is not over, but player found a true set
+								// Game is over, display player with highest score
 								String newOp = "BROADCAST:GAMEOVER:" + gameNum + ":" + result.substring(9, result.length());
 								opQueue.add(newOp);
 								
 								String scoresList = lobby.games[gameNum-1].showScores();
 								scoresList = "BROADCAST:" + scoresList;
 								opQueue.add(scoresList);
+								
+								String gamenotif = "BROADCAST:GAMENOTIFICATION:" + gameNum + ":" + "Game over! Hope you had fun!";
+								opQueue.add(gamenotif);
 							}
 						}
 						
 						else {
 							// Else player's set claim was not true
+							String gamenotif = "BROADCAST:GAMENOTIFICATION:" + gameNum + ":" + p.name + " submitted a false set!";
+							opQueue.add(gamenotif);
+							
+							String releaseStr = "BROADCAST:RELEASELOCK" + gameNum;
+							opQueue.add(releaseStr);
+							
 							String scoresList = lobby.games[gameNum-1].showScores();
 							scoresList = "BROADCAST:" + scoresList;
 							opQueue.add(scoresList);
@@ -254,7 +273,13 @@ class PlayerThread extends Thread {
 						int gameNum = Integer.parseInt(parts[1]);
 						String userRequesting = parts[2];
 						String newOp = "SETLOCKREQ:" + gameNum + ":" + userRequesting;
-						opQueue.add(line);
+						opQueue.add(newOp);
+					}
+					
+					else if ("RELEASELOCK".equals(parts[0])) {
+						int gameNum = Integer.parseInt(parts[1]);
+						String newOp = "BROADCAST:RELEASELOCK" + gameNum;
+						opQueue.add(newOp);
 					}
 					
 					else if ("CARDCLICK".equals(parts[0])) {
@@ -411,7 +436,11 @@ class Worker extends Thread {
 				// Also have to send that player the cards in play in that game
 				String cardsOnBoard = lobby.games[gameRoom-1].board.displayBoard();
 				os.println(cardsOnBoard);
+				os.flush();
 				System.out.println(cardsOnBoard);
+				
+				String welcomeMsg = "GAMENOTIFICATION:Welcome to Game Room " + gameRoom;
+				os.println(welcomeMsg);
 				os.flush();
 			}
 			

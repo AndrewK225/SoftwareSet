@@ -1,6 +1,3 @@
-/**
- * @(#)CheckBoxIcon.java	1.0 03/18/09
- */
 import javax.swing.Icon;
 import javax.swing.JCheckBox;
 import javax.swing.UIManager;

@@ -66,8 +66,12 @@ public class Game{
 			return false;
 	}
 	
+	public void releaseLock() {
+		lock_set = false;
+	}
+	
 	class Release_lock extends TimerTask {
-		public void run(){
+		public void run() {
 			lock_set = false;
 			num_inputs = 0;
 		}
@@ -95,6 +99,7 @@ public class Game{
 				System.out.println("replacing 3 cards");
 				board.replaceTriplet(deck,input1,input2,input3);
 			}
+			
 			while ((!board.is_set())&&(deck.num_cards > 2)){ 
 				//System.out.println("Adding cards. Deck size: " + deck.num_cards);
 				board.addTriplet(deck);
@@ -104,8 +109,9 @@ public class Game{
 			
 			String cardUpdateStr;
 			
+			// If no available sets on board and out of cards in the deck
 			if ((!board.is_set())&&(deck.num_cards < 3)) {
-				//we find the winner and his score and return it
+				//we find the winner and his/her score and return it
 				int highscore = 0;
 				String winner = "";
 				java.util.Set<String> keys = players.keySet();
@@ -113,8 +119,12 @@ public class Game{
 		        	if (players.get(key).score > highscore){
 		        		winner = key;
 		        		highscore = players.get(key).score;
-		        		players.get(key).score = 0; //since we are about to reset the game, we set everyone's score to 0.
 		        	}
+		        	if (players.get(key).score == highscore) {
+		        		winner += " and " + key;
+		        	}
+		        	//since we are about to reset the game, we set everyone's score to 0.
+		        	players.get(key).score = 0;
 		        }
 				cardUpdateStr = "GAMEOVER" + ":" + winner + ":" + highscore + ":";
 				//after returning the winner's score, we make a new game.

@@ -22,18 +22,6 @@ public class Lobby {
 		//Player newPlayer = new Player(playerName);
 		String playerName = newPlayer.name;
 		players.put(playerName, newPlayer);
-		
-		/*
-		if (players.put(playerName, newPlayer) != null) {
-			System.out.println("LobbyClass: Added player with name: " + newPlayer.name);
-			return true;
-		}
-		
-		else {
-			System.err.println("LobbyClass: Error creating a new player for username '" + newPlayer.name + "'");
-			return false;
-		}
-		*/
 		String returnStr = showPlayers();
 		return returnStr;
 	}

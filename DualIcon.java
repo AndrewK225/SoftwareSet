@@ -2,6 +2,7 @@
  * @(#)DualIcon.java	1.0 03/18/09
  */
 
+
 import java.awt.Component;
 import java.awt.Graphics;
 import javax.swing.Icon;

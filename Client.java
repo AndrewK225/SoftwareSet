@@ -514,7 +514,7 @@ public class Client {
 			case GAME:
 				currState = GAME;
 				frames.show(states, GAMESTATE);
-				gameID.setText("Welcome to Game Room " + gameNum);
+				gameID.setText("Default: Welcome to Game Room " + gameNum);
 				//theGamePanel.setPreferredSize(new Dimension(1024, 768));
 				mainframe.setPreferredSize(new Dimension(1300, 768));
 				mainframe.setLocation(new Point(0,0));
@@ -730,13 +730,24 @@ public class Client {
 				JDialog d = new JDialog(mainframe, "Game Results", true);
 				d.setSize(500,80);
 				JPanel p = new JPanel();
-				String message = "<html>Game is over! The winner is '" + winner + "' with a total of " + highscore + " points.<br>New game has already started!</html>";
+				String message = "<html>Game is over! The winner(s): '" + winner + "' with a highscore of " + highscore + " points.<br>New game has already started!</html>";
 				p.add(new JLabel(message));
 				p.setSize(500,80);
 				d.add(p);
 				d.setLocationRelativeTo(mainframe);
 				d.setVisible(true);
 			}
+		}
+		
+		else if ("GAMENOTIFICATION".equals(parts[0])){
+			System.out.println("Received game notification.");
+			int affectedGame = Integer.parseInt(parts[1]);
+			if (affectedGame == gameNum) {
+				String notifMsg = parts[2];
+				gameID.setText(notifMsg);
+				mainframe.pack();
+			}
+			
 		}
 		
 		else if ("SCORES".equals(parts[0])) {
@@ -760,6 +771,7 @@ public class Client {
 				if (!lock_set) {
 					int indexClicked = Integer.parseInt(parts[2]);
 					boolean nextState = !(checkBoxes[indexClicked].isSelected());
+					//checkBoxes[indexClicked].setEnabled(true);
 					checkBoxes[indexClicked].setSelected(nextState);
 				}
 			}
@@ -781,6 +793,7 @@ public class Client {
 		// Create the top panel that displays the game number
 		gameID = new JLabel("Welcome to Game Room " + gameNum);
 		toppanel.add(gameID, BorderLayout.WEST );
+		
 		// Create the set button
 		set_button = new JButton("SET!");
 		set_button.setPreferredSize(new Dimension(75, 25));
@@ -857,13 +870,17 @@ public class Client {
 									setChain += (":" + m);
 								}
 							}
-
-							System.out.println("CLAIMSET:" + gameNum + setChain);
+							
 							sendMessage("CLAIMSET:" + gameNum + setChain);
+							sendMessage("RELEASELOCK:" + gameNum);
+							releaseLock();
+							System.out.println("CLAIMSET:" + gameNum + setChain);
+							
 							lock_set = false;
 							for ( int i = 0; i < 21; i++){
 								checkBoxes[i].setEnabled(false);
 							}
+							mainframe.pack();
 						}
 				}
 			});
@@ -948,6 +965,22 @@ public class Client {
 			boardpanel.add(checkBoxes[i]);
 		}
 		mainframe.pack();
+	}
+	
+	private static void releaseLock() {
+		lock_set = false;
+    	System.out.format("Time's up!%n");
+        
+        for ( int i = 0; i < 21; i++){
+        	checkBoxes[i].setSelected(false);
+			checkBoxes[i].setEnabled(false);
+			checkBoxes[i].setVisible(true);
+			checked[i] = 0;
+		}
+        
+        counter = 0;
+        setLockTimer.cancel(); //Terminate the timer thread
+        set_button.setBackground(Color.YELLOW);
 	}
 	
 	private static class ReleaseSetLock extends TimerTask {
