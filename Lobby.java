@@ -13,7 +13,7 @@ public class Lobby {
 		players = playerList;
 		for(int i = 0; i < number_of_games; i++) {
 			//create games
-			games[i] = new Game(i, players);
+			games[i] = new Game(i+1, players);
 		}
 		//addPlayer("0");
 	}
@@ -21,10 +21,7 @@ public class Lobby {
 	public String addPlayer(Player newPlayer) {
 		//Player newPlayer = new Player(playerName);
 		String playerName = newPlayer.name;
-		System.out.println("LobbyClass: Player obj created = " + newPlayer);
-		
 		players.put(playerName, newPlayer);
-		System.out.println(players);
 		
 		/*
 		if (players.put(playerName, newPlayer) != null) {
@@ -41,19 +38,24 @@ public class Lobby {
 		return returnStr;
 	}
 	
-	public String removePlayer(Player p) {
-		System.out.println("Removing player: " + p.name);
-		players.remove(p.name);
-		p = null;
-		String playerList = showPlayers();
-		return playerList;
-	}
-	
 	public String removePlayer(String playerName) {
 		System.out.println("Removing player: " + playerName);
 		Player p = players.get(playerName);
-		players.remove(p.name);
-		p = null;
+		if (p != null) {
+			if (p.location == 1) {
+				game1Pop--;
+			}
+			else if (p.location == 1) {
+				game2Pop--;
+			}
+			else if (p.location == 3) {
+				game3Pop--;
+			}
+			
+			players.remove(p.name);
+			p = null;
+		}
+		
 		String playerList = showPlayers();
 		return playerList;
 	}
@@ -64,15 +66,12 @@ public class Lobby {
 		// If player is moving into a game from the lobby
 		if (destination > 0) {
 			if (destination == 1)
-				game1Pop++;
-				
+				game1Pop++;		
 			else if (destination == 2)
 				game2Pop++;
-				
 			else if (destination == 3)
-				game3Pop++; 
+				game3Pop++;
 		}
-		
 		// Else the player is returning to lobby from a game
 		else {
 			if (p.location == 1)
@@ -88,18 +87,20 @@ public class Lobby {
 		p.location = destination;
 		String playerList = showPlayers();
 		
-		
 		return playerList;
 	}
 	
 	public String showLobbyInfo() {
-		String roomDetails = "LobbyInfo:";
+		String roomDetails = "LOBBYINFO:";
 		int game1decksize = games[0].getDeckSize();
+		int game1numCards = games[0].board.num_cards;
 		int game2decksize = games[1].getDeckSize();
+		int game2numCards = games[1].board.num_cards;
 		int game3decksize = games[2].getDeckSize();
-		roomDetails = roomDetails + "Game1:" + game1Pop + " players with " + game1decksize + " cards left in the deck.:";
-		roomDetails = roomDetails + "Game2:" + game2Pop + " players with " + game2decksize + " cards left in the deck.:";
-		roomDetails = roomDetails + "Game3:" + game3Pop + " players with " + game3decksize + " cards left in the deck.:";
+		int game3numCards = games[2].board.num_cards;
+		roomDetails = roomDetails + "Game1:" + game1Pop + " players inside. " + game1numCards + " cards currently in play, with " + game1decksize + " cards left in the deck.:";
+		roomDetails = roomDetails + "Game2:" + game2Pop + " players inside. " + game2numCards + " cards currently in play, with " + game2decksize + " cards left in the deck.:";
+		roomDetails = roomDetails + "Game3:" + game3Pop + " players inside. " + game3numCards + " cards currently in play, with " + game3decksize + " cards left in the deck.";
 		
 		return roomDetails;
 	}

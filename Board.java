@@ -24,7 +24,6 @@ public class Board {
 		String retStr = "";
         System.out.println("The board contains " + num_cards + " cards.");
 		for (int i = 0; i < num_cards; i++){
-			System.out.print(i + "\t");
 			retStr += cards[i].printCard();
 
             if (i != (num_cards-1))
@@ -35,7 +34,7 @@ public class Board {
 		
 		retStr = deckSize + ":" + num_cards + ":" + retStr;
 		System.out.println("Displaying board: " + retStr);
-      return retStr;
+		return retStr;
 	}
 	
 	public void addTriplet(Deck deck){  //take the top three cards of the deck and put them on the board

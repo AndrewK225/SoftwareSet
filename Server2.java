@@ -121,7 +121,7 @@ class PlayerThread extends Thread {
 							lobby.movePlayer(p.name, -1);
 							commsLink.remove(p.name, outputStream);
 							
-							String newPlayerList = lobby.removePlayer(p);
+							String newPlayerList = lobby.removePlayer(p.name);
 							String newOp = "BROADCAST:" + newPlayerList;
 							opQueue.add(newOp);
 							
@@ -137,6 +137,11 @@ class PlayerThread extends Thread {
 					else if("LOGIN".equals(parts[0])) {
 						check = DBUtils.signIn(parts[1], parts[2]);
 						//let client know how SignIn went
+						if (check == 0) {
+							if (lobby.players.containsKey(parts[1]))
+								check = -1;
+						}
+						
 						System.out.println("PlayerThread: Login attempt for: " + parts[1] + " resulted in: " + check);
 						outputStream.println("LOGIN:" + check);
 						outputStream.flush();
@@ -148,6 +153,10 @@ class PlayerThread extends Thread {
 							commsLink.put(parts[1], outputStream);
 							String newOp = "BROADCAST:" + playerList;
 							opQueue.add(newOp);
+							
+							String lobbyInfo = lobby.showLobbyInfo();
+							outputStream.println(lobbyInfo);
+							outputStream.flush();
 						}
 					}
 					
@@ -163,13 +172,20 @@ class PlayerThread extends Thread {
 					else if("GAMECHOICE".equals(parts[0])) {
 						// Player is choosing a room to enter
 						System.out.println("Room chosen = " + parts[1]);
-						int gameRoom = 0;
-						gameRoom = Integer.parseInt(parts[1]);
+						int gameRoom = Integer.parseInt(parts[1]);
 						String newPlayerList = "";
 						newPlayerList = lobby.movePlayer(p.name, gameRoom);
-						
 						String newOp = "BROADCAST:" + newPlayerList;
 						opQueue.add(newOp);
+						
+						String lobbyInfo = lobby.showLobbyInfo();
+						newOp = "BROADCAST:" + lobbyInfo;
+						opQueue.add(newOp);
+						
+						String scoresList = lobby.games[gameRoom-1].showScores();
+						System.err.println("Printing out scores = " + scoresList);
+						scoresList = "BROADCAST:" + scoresList;
+						opQueue.add(scoresList);
 						
 						// Also have to send that player the cards in play in that game
 						String cardsOnBoard = lobby.games[gameRoom-1].board.displayBoard();
@@ -187,17 +203,59 @@ class PlayerThread extends Thread {
 					
 					else if("CLAIMSET".equals(parts[0])) {
 						System.out.println("Received a set triplet request from user '" + p.name + "': " + line);
-						int gnum = Integer.parseInt(parts[1]);
+						int gameNum = Integer.parseInt(parts[1]);
 						int card1 = Integer.parseInt(parts[2]);
 						int card2 = Integer.parseInt(parts[3]);
 						int card3 = Integer.parseInt(parts[4]);
-						String result = lobby.check_set(p.name,gnum,card1,card2,card3);
+						String result = lobby.check_set(p.name,gameNum,card1,card2,card3);
 						
 						if (result != null) {
-							String newOp = "BROADCAST:UPDATECARDS:" + gnum + ":" + result;
-							opQueue.add(newOp);
+							if (result.equals("GAME OVER")) {
+								//send the clients a message telling them the game is over. 
+								//set everyone's score to 0.
+								//create a new game with new cards.
+								//broadcast the new info to all players
+							}
+							else {
+								// Game is not over, but player found a true set
+								String newOp = "BROADCAST:UPDATECARDS:" + gameNum + ":" + result;
+								opQueue.add(newOp);
+								
+								String scoresList = lobby.games[gameNum-1].showScores();
+								scoresList = "BROADCAST:" + scoresList;
+								opQueue.add(scoresList);
+							}
+						}
+						
+						else {
+							// Else player's set claim was not true
 						}
 					}
+					
+					else if ("LEAVEROOM".equals(parts[0])) {
+						int oldGameNum = p.location;
+						
+						String newPlayerList = lobby.movePlayer(p.name, 0);
+						String newOp = "BROADCAST:" + newPlayerList;
+						opQueue.add(newOp);
+						
+						String lobbyInfo = lobby.showLobbyInfo();
+						newOp = "BROADCAST:" + lobbyInfo;
+						opQueue.add(newOp);
+						
+						String scoresList = lobby.games[oldGameNum-1].showScores();
+						System.err.println("Printing out scores = " + scoresList);
+						scoresList = "BROADCAST:" + scoresList;
+						opQueue.add(scoresList);
+					}
+					
+					else if ("SETLOCKREQ".equals(parts[0])) {
+						int gameNum = Integer.parseInt(parts[1]);
+						String userRequesting = parts[2];
+						String newOp = "SETLOCKREQ:" + gameNum + ":" + userRequesting;
+						opQueue.add(line);
+					}
+					
 					
 					else {
 						System.out.println("PlayerThread for '" + p.name + "' moving operation '" + line + "' to queue.");
@@ -226,13 +284,17 @@ class PlayerThread extends Thread {
 					opQueue.add(newOp);
 					inputStream = null;
 					
+					String lobbyInfo = lobby.showLobbyInfo();
+					newOp = "BROADCAST:" + lobbyInfo;
+					opQueue.add(newOp);
+					
 					System.out.println("Client attempting to exit");
 					System.out.println("About to call movePlayer");
 					lobby.movePlayer(p.name, -1);
 					System.out.println("After movePlayer");
 					commsLink.remove(p.name, outputStream);
 					//lobby.removePlayer(p);
-					String newPlayerList = lobby.removePlayer(p);
+					String newPlayerList = lobby.removePlayer(p.name);
 					newOp = "BROADCAST:" + newPlayerList;
 					opQueue.add(newOp);
 				}
@@ -301,6 +363,17 @@ class Worker extends Thread {
 			}
 		}
 		
+		else if ("SETLOCKREQ".equals(uname)) {
+			int gameNum = Integer.parseInt(parts[1]);
+			String userRequesting = parts[2];
+			System.out.println("Queue proc setting set lock request from player: " + userRequesting);
+			
+			if ((lobby.games[gameNum-1]).getSetLock(userRequesting) == true) {
+				String newOp = "BROADCAST:SETLOCKED:" + gameNum + ":" + userRequesting;
+				opQueue.add(newOp);
+			}
+		}
+		
 		else if ("REMOVEPLAYER".equals(uname)) {
 			String removePlayerName = parts[1];
 			lobby.movePlayer(removePlayerName, -1);
@@ -323,6 +396,11 @@ class Worker extends Thread {
 				String newPlayerList = lobby.movePlayer(uname, gameRoom);
 				String newOp = "BROADCAST:" + newPlayerList;
 				opQueue.add(newOp);
+				
+				String scoresList = lobby.games[gameRoom-1].showScores();
+				System.err.println("Printing out scores = " + scoresList);
+				scoresList = "BROADCAST:" + scoresList;
+				opQueue.add(scoresList);
 				
 				// Also have to send that player the cards in play in that game
 				String cardsOnBoard = lobby.games[gameRoom-1].board.displayBoard();
