@@ -66,6 +66,7 @@ public class Client {
 	private static JTextArea activePlayersList = null; 
 	private static JScrollPane activePlayersBox = null;
 	private static JScrollPane chatBox = null;
+	private static JTextField chatMessage = null;
 	
 	private static String LOGINSTATE = "Login Panel State";
 	private static String LOBBYSTATE = "Lobby State";
@@ -115,20 +116,10 @@ public class Client {
 		screenHeight = 768;
 		screenWidth = 1024;
 		
-		mainframe = new JFrame("Set Client");
+		mainframe = new JFrame("Set! By Abiyaz, Andrew, and Miraj");
 		states = new JPanel(new CardLayout());
 		mainframe.add(states);
-		//mainframe.setContentPane(states);
 		mainframe.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		
-		
-		// mainframe.add(mainpanel); // or set as content pane?
-		//mainframe.setLayout();
-		
-		//mainframe.setSize(screenSize);
-		//mainframe.setPreferredSize(screenSize);
-		
-		//mainframe.setResizable(false);
 		mainframe.pack();
 		mainframe.setVisible(true);
 		createLobby();
@@ -432,32 +423,54 @@ public class Client {
 	    activePlayersList.setWrapStyleWord(true);
 	    activePlayersList.setEditable(false);
 	    //activePlayersList.setSize(activePlayersBoxWidth-30, activePlayersBoxHeight-30);
-	    activePlayersList.setFont(new Font("Serif", Font.BOLD, 20));
+	    activePlayersList.setFont(new Font("Serif", Font.BOLD, 17));
+	    activePlayersList.setBackground(Color.GREEN);
 	    
 	    activePlayersBox = new JScrollPane(activePlayersList);
 	    activePlayersBox.setSize(gameBtnWidth, screenHeight - gameBtnWidth - 3*padding);
-	    activePlayersBox.setBackground(Color.WHITE);
-	    activePlayersBox.setBounds(3*gameBtnWidth + 4*padding, padding, gameBtnWidth, screenHeight - gameBtnWidth - 3*padding);
+	    activePlayersBox.setBounds(3*gameBtnWidth + 4*padding, padding, gameBtnWidth-padding, screenHeight - gameBtnWidth - 3*padding);
 	    playersVertBar = activePlayersBox.getVerticalScrollBar();
 	    playersVertBar.setValue( playersVertBar.getMaximum() );
 	    lobbypanel.add(activePlayersBox);
 	    
 	    
-	    chatList = new JTextArea("Welcome to the lobby!\n");
+	    chatList = new JTextArea("Welcome to our set game!\n");
 	    chatList.setLineWrap(true);
 	    chatList.setWrapStyleWord(true);
 	    chatList.setEditable(false);
 	    //activePlayersList.setSize(activePlayersBoxWidth-30, activePlayersBoxHeight-30);
 	    chatList.setFont(new Font("Serif", Font.PLAIN, 16));
-	    
+	    chatList.setBackground(Color.PINK);
 	    
 	    chatBox = new JScrollPane(chatList);
 	    chatBox.setSize(screenWidth, screenHeight - gameBtnWidth - 100);
-	    chatBox.setBackground(Color.WHITE);
-	    chatBox.setBounds(padding, screenHeight - gameBtnHeight - 2*padding, screenWidth - 2*padding, gameBtnHeight-50);
+	    chatBox.setBounds(padding, screenHeight - gameBtnHeight - 2*padding, screenWidth - 3*padding, gameBtnHeight-50);
 	    chatVertBar = chatBox.getVerticalScrollBar();
 	    chatVertBar.setValue( chatVertBar.getMaximum() );
 	    lobbypanel.add(chatBox);
+	    
+	    chatMessage = new JTextField(200);
+	    chatMessage.setText("");
+	    chatMessage.setEditable(true);
+	    chatMessage.setAutoscrolls(true);
+	    chatMessage.setBounds(padding, screenHeight - 6*padding+10, screenWidth - 3*padding, 25);
+	    chatMessage.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// Enter key pressed = send chat message to server
+				String chatStr = chatMessage.getText();
+				chatMessage.setText("");
+				chatStr = username + " - " + chatStr;
+				sendMessage("CHAT:" + chatStr);
+			}
+		});
+	    
+	    
+	    lobbypanel.add(chatMessage);
+	    
+	    JLabel chatGuide = new JLabel("Simply press ENTER to send your message.");
+	    chatGuide.setEnabled(false);
+	    chatGuide.setBounds(padding, screenHeight - 6*padding + 35, 300, 20);
+	    lobbypanel.add(chatGuide);
 	    
 	    states.add(lobbypanel, LOBBYSTATE);
 	}
@@ -650,11 +663,18 @@ public class Client {
 		
 		// Incoming chat is like "CHAT: username - sometext"
 		else if ("CHAT".equals(parts[0])) {
-			chatList.setText(parts[1]);
-			chatBox.setViewportView(chatList);
-			chatVertBar = chatBox.getVerticalScrollBar();
-		    chatVertBar.setValue( chatVertBar.getMaximum() );
-			//mainframe.pack();
+			if (currState == LOBBY) {
+				String chatMsg = "";
+				for (int i = 1; i < parts.length; i++) {
+					chatMsg = chatMsg + parts[i];
+				}
+				chatMsg = chatMsg + "\n";
+				
+				chatList.append(chatMsg);
+				chatBox.setViewportView(chatList);
+				chatVertBar = chatBox.getVerticalScrollBar();
+			    chatVertBar.setValue( chatVertBar.getMaximum() );
+			}
 		}
 		
 		else if ("UPDATECARDS".equals(parts[0])) {
@@ -690,6 +710,35 @@ public class Client {
 			}
 		}
 		
+		else if ("GAMEOVER".equals(parts[0])){
+			System.out.println("Got game over notification.");
+			int affectedGame = Integer.parseInt(parts[1]);
+			String winner = parts[2]; 
+			String highscore = parts[3];
+			if (affectedGame == gameNum) {
+				String updatedCardStr = "";
+				int i;
+				// Need to append back the parts with the ":"
+				for (i = 4; i < Array.getLength(parts)-1; i++) {
+					updatedCardStr = updatedCardStr + parts[i] + ":";
+				}
+				for (i = Array.getLength(parts)-1; i < Array.getLength(parts); i++) {
+					updatedCardStr = updatedCardStr + parts[i];
+				}
+				update_board(updatedCardStr);
+				
+				JDialog d = new JDialog(mainframe, "Game Results", true);
+				d.setSize(500,80);
+				JPanel p = new JPanel();
+				String message = "<html>Game is over! The winner is '" + winner + "' with a total of " + highscore + " points.<br>New game has already started!</html>";
+				p.add(new JLabel(message));
+				p.setSize(500,80);
+				d.add(p);
+				d.setLocationRelativeTo(mainframe);
+				d.setVisible(true);
+			}
+		}
+		
 		else if ("SCORES".equals(parts[0])) {
 			System.out.println("Received scores: " + line);
 			int gameAffected = Integer.parseInt(parts[1]);
@@ -699,6 +748,19 @@ public class Client {
 				for (int i = 2; i < parts.length; i=i+2) {
 					Object[] row = { parts[i], parts[i+1] };
 					model.addRow(row);
+				}
+			}
+		}
+		
+		else if ("CARDCLICK".equals(parts[0])) {
+			System.err.println("Client received card click: " + line);
+			int gameAffected = Integer.parseInt(parts[1]);
+			if (gameAffected == gameNum) {
+				// If you don't own the lock
+				if (!lock_set) {
+					int indexClicked = Integer.parseInt(parts[2]);
+					boolean nextState = !(checkBoxes[indexClicked].isSelected());
+					checkBoxes[indexClicked].setSelected(nextState);
 				}
 			}
 		}
@@ -727,14 +789,6 @@ public class Client {
 			public void actionPerformed(ActionEvent e) {
 				// Upon clicking set, ask for the set lock so player can select 3 cards
 				sendMessage("SETLOCKREQ:" + gameNum + ":" + username);
-				
-				/*
-				lock_set = true;
-				for ( int i = 0; i < 21; i++){
-					checkBoxes[i].setEnabled(true);
-				}
-				*/
-				
 			}
 		});
 		set_button.setBackground(Color.YELLOW);
@@ -779,10 +833,13 @@ public class Client {
 			checkBoxes[i].addActionListener(new ActionListener(){
 				public void actionPerformed (ActionEvent e) {
 						int index = boardpanel.getComponentZOrder((Component) e.getSource());
+						sendMessage("CARDCLICK:" + gameNum + ":" + index);
+						
 						if (checkBoxes[index].isSelected()){
 							checked[index] = 1;
 							counter++;
 						} 
+						
 						else{
 							checked[index] = 0;
 							if (counter > 0)
@@ -833,6 +890,7 @@ public class Client {
 		
 		for ( int i = 0; i < 21; i++){
 				checkBoxes[i].setEnabled(true);
+				checkBoxes[i].setSelected(false);
 		}
 	}
 	
@@ -889,51 +947,8 @@ public class Client {
 			checkBoxes[i].setVisible(true);
 			boardpanel.add(checkBoxes[i]);
 		}
-		
-		/*
-		for (int i = board_size; i < 21; i++){
-			checkBoxes[i].setVisible(false);	
-		}
-		*/
+		mainframe.pack();
 	}
-	
-	
-	/*
-	public static void add_player(String player){
-		players[num_players][0] = player;
-		players[num_players][1] = "0";
-		num_players++;
-	}
-	
-	public static void update_score(String player,String score){
-		int found_player = 0;
-		for (int i = 0; (i<num_players)&&(found_player==0); i++){
-			if (players[i][0] == player){
-				players[i][1] = score;
-				found_player = 1;
-			}
-		}
-		if (found_player == 0){
-			add_player(player);
-		}
-	}
-	public static void remove_player(String player){
-		int index = -1;
-		for (int i = 0; (i < num_players)&&(index == -1); i++){
-			if (players[i][0] == player){
-				index = i;
-			}
-		}
-		for (int i = index; i < num_players - 1; i++){
-			players[i][0] = players[i+1][0];
-			players[i][1] = players[i+1][1];
-		}
-		players[num_players][0] = null;
-		players[num_players][1] = null;
-		num_players--;
-	}
-	*/
-	
 	
 	private static class ReleaseSetLock extends TimerTask {
         public void run() {
@@ -944,47 +959,12 @@ public class Client {
             	checkBoxes[i].setSelected(false);
     			checkBoxes[i].setEnabled(false);
     			checkBoxes[i].setVisible(true);
+    			checked[i] = 0;
     		}
+            
             counter = 0;
             setLockTimer.cancel(); //Terminate the timer thread
             set_button.setBackground(Color.YELLOW);
         }
     }
 }
-
-/*
-- I changed it so that the checkboxes are disabled unless the user declares a set. This should make it less confusing.
-- I fixed leave room on the client side, it still needs to be changed on the server side.
- 
-In the Game room, the Game number at the top is not displaying correctly. I'm not sure what's wrong but I WILL FIX THIS DON'T WORRY ABOUT IT.
- 
-For updating player info in the playertable:
-- When player logins to game, the server needs to update its own player info and then broadcast it to all clients. The client function to be called is add_player(player).
-- When player leaves game, the server should update its own player info and then broadcast it to all clients. The client function to be called is remove_player(player).
-- When player correctly finds a set, the server should update the score, and broadcast the new score  to all clients. The client should call update_score(player,score).
-- When updating the score, the server needs to subtract 1 point for an incorrect set.
-
-For game over:
-- go to the server class, search "GAME OVER" and look for my comments and replace them with actual code.
-
-- For the set lock:
-- When user Abi declares set (but did not yet select three cards), he sends the request to server, who upon receipt of the request, starts a 5 second timer.
-- While the 5 second timer is active, the server's set_lock variable is true, and no other requests will be accepted.
-- When the user Abi selects three cards, another request is sent to the server. If this is sent within the 5 second timer, the server processes the set declaration
-The server then turns set_lock off and turns its timer off. The server tells all clients whether the set was right or wrong and updates scores etc.
-- If the 5 second timer is done and the person who declared did not choose 3 cards,subtract a point from the culprit player, turn set_lock off and inform all clients. 
-The players are then free to try again to find and declare a set.
-- A different set_lock variable and set_lock timer must be kept for each game. Two different game rooms cannot use the same timer.
-
-- The final testing of the game should do the following:
-- Server is hosted and running on VM
-- Multiple players register with their own names on their own machines and then login to a game and play a normal game of set. When the game is over, the winner is 
-displayed and the game is reset.
-- If a player declares a set, make sure the change in score and the cards is visible to all other players.
-- If a player leaves the room, make sure the change is visible to all other players.
-- If a player leaves the room and then rejoins, make sure the change is visible to all other players, and that the player's score is 0.
-
--
-*MP*
-- Need to display winner and restart the game
-*/

@@ -197,7 +197,7 @@ class PlayerThread extends Thread {
 					
 					else if("CHAT".equals(parts[0])) {
 						System.out.println("Received chat from user '" + p.name + "': " + line);
-						String newOp = "CHAT:" + line;
+						String newOp = "BROADCAST:" + line;
 						opQueue.add(newOp);
 					}
 					
@@ -210,15 +210,13 @@ class PlayerThread extends Thread {
 						String result = lobby.check_set(p.name,gameNum,card1,card2,card3);
 						
 						if (result != null) {
-							if (result.equals("GAME OVER")) {
-								//send the clients a message telling them the game is over. 
-								//set everyone's score to 0.
-								//create a new game with new cards.
-								//broadcast the new info to all players
+							if (result.substring(0, 8)!="GAMEOVER"){
+								String newOp = "BROADCAST:UPDATECARDS:" + gameNum + ":" + result;
+								opQueue.add(newOp);
 							}
 							else {
 								// Game is not over, but player found a true set
-								String newOp = "BROADCAST:UPDATECARDS:" + gameNum + ":" + result;
+								String newOp = "BROADCAST:GAMEOVER:" + gameNum + ":" + result.substring(9, result.length());
 								opQueue.add(newOp);
 								
 								String scoresList = lobby.games[gameNum-1].showScores();
@@ -229,6 +227,9 @@ class PlayerThread extends Thread {
 						
 						else {
 							// Else player's set claim was not true
+							String scoresList = lobby.games[gameNum-1].showScores();
+							scoresList = "BROADCAST:" + scoresList;
+							opQueue.add(scoresList);
 						}
 					}
 					
@@ -254,6 +255,11 @@ class PlayerThread extends Thread {
 						String userRequesting = parts[2];
 						String newOp = "SETLOCKREQ:" + gameNum + ":" + userRequesting;
 						opQueue.add(line);
+					}
+					
+					else if ("CARDCLICK".equals(parts[0])) {
+						System.out.println("Server saw card clicked = " + line);
+						opQueue.add("BROADCAST:" + line);
 					}
 					
 					

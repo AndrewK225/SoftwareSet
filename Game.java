@@ -104,10 +104,26 @@ public class Game{
 			
 			String cardUpdateStr;
 			
-			if ((!board.is_set())&&(deck.num_cards < 3)){
-				//if game is over
-				cardUpdateStr = "GAME OVER";
-			} else {
+			if ((!board.is_set())&&(deck.num_cards < 3)) {
+				//we find the winner and his score and return it
+				int highscore = 0;
+				String winner = "";
+				java.util.Set<String> keys = players.keySet();
+		        for(String key: keys){
+		        	if (players.get(key).score > highscore){
+		        		winner = key;
+		        		highscore = players.get(key).score;
+		        		players.get(key).score = 0; //since we are about to reset the game, we set everyone's score to 0.
+		        	}
+		        }
+				cardUpdateStr = "GAMEOVER" + ":" + winner + ":" + highscore + ":";
+				//after returning the winner's score, we make a new game.
+				deck = new Deck();
+				deck.shuffle();
+				board = new Board(deck);
+				cardUpdateStr += board.displayBoard();
+			}
+            else{
 				//else
 				cardUpdateStr = board.displayBoard();
 			}
