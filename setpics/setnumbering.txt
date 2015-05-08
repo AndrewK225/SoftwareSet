@@ -1,0 +1,7 @@
+purple, green, red
+
+oval, diamond, squiggle
+
+1, 2, 3
+
+clear, striped, solid
